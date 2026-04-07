@@ -1,0 +1,1312 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Redes Neuronales — Fundamentos</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400;1,600&family=Lora:ital,wght@0,400;0,500;1,400&family=JetBrains+Mono:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg:#0d0e16; --bg2:#11121e; --bg3:#161828; --surface:#1b1d2e; --border:#272a44;
+  --gold:#c9a853; --gold2:#e8c97e; --teal:#3db8cd; --rose:#e07282;
+  --sage:#5bb898; --lav:#8878d0; --sien:#d47d55;
+  --text:#ece8dc; --text2:#8a8898; --text3:#484862;
+  --r:6px; --nav-h:54px; --foot-h:38px;
+}
+*{margin:0;padding:0;box-sizing:border-box;}
+html{scroll-behavior:smooth;}
+body{background:var(--bg);color:var(--text);font-family:'Lora',serif;overflow-x:hidden;line-height:1.75;padding-bottom:var(--foot-h);}
+
+/* ── NAV ── */
+nav{position:fixed;top:0;left:0;right:0;z-index:200;background:rgba(13,14,22,0.93);backdrop-filter:blur(24px);border-bottom:1px solid var(--border);display:flex;align-items:center;height:var(--nav-h);padding:0 1.5rem;}
+.nav-logo{font-family:'JetBrains Mono',monospace;font-size:.72rem;color:var(--gold);letter-spacing:.2em;white-space:nowrap;flex-shrink:0;margin-right:1.5rem;}
+.nav-links{display:flex;gap:0;overflow-x:auto;scrollbar-width:none;flex:1;}
+.nav-links::-webkit-scrollbar{display:none;}
+.nav-links a{color:var(--text3);text-decoration:none;font-family:'JetBrains Mono',monospace;font-size:.68rem;padding:0 .8rem;height:var(--nav-h);display:flex;align-items:center;border-bottom:2px solid transparent;transition:all .2s;white-space:nowrap;letter-spacing:.04em;}
+.nav-links a:hover,.nav-links a.active{color:var(--gold);border-bottom-color:var(--gold);}
+.hamburger{display:none;flex-direction:column;justify-content:center;gap:5px;width:40px;height:40px;background:transparent;border:none;cursor:pointer;padding:8px;margin-left:auto;flex-shrink:0;}
+.hamburger span{display:block;width:100%;height:1.5px;background:var(--text2);transition:all .3s;}
+.hamburger.open span:nth-child(1){transform:translateY(6.5px) rotate(45deg);}
+.hamburger.open span:nth-child(2){opacity:0;}
+.hamburger.open span:nth-child(3){transform:translateY(-6.5px) rotate(-45deg);}
+
+/* ── MOBILE OVERLAY ── */
+#mob{position:fixed;inset:0;z-index:190;background:rgba(13,14,22,.98);backdrop-filter:blur(24px);display:flex;flex-direction:column;align-items:center;justify-content:center;transform:translateX(100%);transition:transform .35s cubic-bezier(.4,0,.2,1);padding-top:var(--nav-h);}
+#mob.open{transform:translateX(0);}
+#mob a{color:var(--text2);text-decoration:none;font-size:1rem;padding:.9rem 2rem;width:100%;text-align:center;border-bottom:1px solid var(--border);font-family:'JetBrains Mono',monospace;letter-spacing:.08em;transition:all .2s;}
+#mob a:first-child{border-top:1px solid var(--border);}
+#mob a:hover,#mob a.active{color:var(--gold);background:rgba(201,168,83,.05);}
+
+/* ── PROGRESS ── */
+.pb{position:fixed;top:var(--nav-h);left:0;right:0;height:1px;background:var(--border);z-index:199;}
+.pf{height:100%;background:var(--gold);width:0%;transition:width .1s;}
+
+/* ── STICKY FOOTER ── */
+#sfooter{position:fixed;bottom:0;left:0;right:0;z-index:200;height:var(--foot-h);background:rgba(11,12,18,.97);border-top:1px solid var(--border);display:flex;align-items:center;justify-content:center;gap:.5rem;}
+#sfooter span{font-family:'Lora',serif;font-size:.75rem;color:var(--text3);letter-spacing:.04em;font-style:italic;}
+#sfooter a{font-family:'Playfair Display',serif;font-size:.78rem;color:var(--gold);text-decoration:underline;text-decoration-style:solid;text-underline-offset:3px;text-decoration-thickness:1px;letter-spacing:.03em;font-weight:600;transition:color .2s;}
+#sfooter a:hover{color:var(--gold2);}
+#sfooter .sep{color:var(--border);font-size:.9rem;margin:0 .1rem;}
+
+/* ── HERO ── */
+#hero{min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:5rem 1.5rem 4rem;text-align:center;position:relative;overflow:hidden;border:none;max-width:100%;margin:0;}
+#hero-canvas{position:absolute;inset:0;width:100%;height:100%;opacity:.22;}
+.hero-eyebrow{font-family:'JetBrains Mono',monospace;font-size:.65rem;letter-spacing:.35em;color:var(--gold);text-transform:uppercase;margin-bottom:1.2rem;animation:fadeUp .8s ease both;position:relative;}
+h1{font-family:'Playfair Display',serif;font-size:clamp(2.8rem,8vw,5.5rem);font-weight:400;line-height:1.08;letter-spacing:-.01em;animation:fadeUp .8s .1s ease both;position:relative;}
+h1 em{color:var(--gold);font-style:italic;}
+.hero-sub{margin-top:1.2rem;max-width:560px;color:var(--text2);font-size:1rem;font-style:italic;animation:fadeUp .8s .2s ease both;position:relative;}
+.hero-pills{display:flex;gap:.4rem;flex-wrap:wrap;justify-content:center;margin-top:2rem;animation:fadeUp .8s .3s ease both;position:relative;}
+.pill{font-family:'JetBrains Mono',monospace;font-size:.62rem;padding:.28rem .8rem;border:1px solid var(--border);border-radius:100px;color:var(--text3);letter-spacing:.06em;}
+.scroll-hint{position:absolute;bottom:1.5rem;display:flex;flex-direction:column;align-items:center;gap:.4rem;color:var(--text3);font-size:.68rem;font-family:'JetBrains Mono',monospace;letter-spacing:.1em;animation:fadeUp 1s 1.2s ease both;}
+.scroll-hint .arr{animation:bounce 2s infinite;}
+
+/* ── SECTIONS ── */
+section{max-width:960px;margin:0 auto;padding:4.5rem 1.5rem;border-top:1px solid var(--border);}
+.sec-num{font-family:'JetBrains Mono',monospace;font-size:.62rem;color:var(--gold);letter-spacing:.25em;margin-bottom:.4rem;display:block;text-transform:uppercase;}
+h2{font-family:'Playfair Display',serif;font-size:clamp(1.9rem,4vw,2.8rem);font-weight:400;line-height:1.1;margin-bottom:1.2rem;letter-spacing:-.01em;}
+h2 em{color:var(--gold);font-style:italic;}
+h3{font-family:'Playfair Display',serif;font-size:1.35rem;font-weight:400;color:var(--text);margin:2rem 0 .6rem;}
+p{color:var(--text2);margin-bottom:.85rem;font-size:.96rem;}
+strong{color:var(--text);}
+
+/* ── CARDS ── */
+.card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:1.2rem;margin:.8rem 0;}
+.card-title{font-family:'JetBrains Mono',monospace;font-size:.62rem;color:var(--gold);letter-spacing:.18em;text-transform:uppercase;margin-bottom:.8rem;}
+
+/* ── MATH BLOCK ── */
+.mblk{background:var(--bg3);border-left:2px solid var(--gold);border-radius:0 var(--r) var(--r) 0;padding:.9rem 1.2rem;margin:.9rem 0;font-family:'JetBrains Mono',monospace;font-size:.82rem;color:var(--text);line-height:2;overflow-x:auto;}
+.mblk .cm{color:var(--text3);font-style:italic;}
+.vc{color:var(--teal);} .va{color:var(--gold);} .vr{color:var(--rose);}
+.vg{color:var(--sage);} .vp{color:var(--lav);} .vo{color:var(--sien);}
+
+/* ── GRID ── */
+.two-col{display:grid;grid-template-columns:1fr 1fr;gap:1rem;margin:.9rem 0;}
+.three-col{display:grid;grid-template-columns:1fr 1fr 1fr;gap:1rem;margin:.9rem 0;}
+@media(max-width:640px){.two-col,.three-col{grid-template-columns:1fr;}}
+
+/* ── INTERACTIVE ── */
+.ibox{background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);overflow:hidden;margin:1.4rem 0;}
+.ihead{background:var(--surface);padding:.65rem 1rem;display:flex;align-items:center;gap:.6rem;border-bottom:1px solid var(--border);flex-wrap:wrap;}
+.ihead span{font-family:'JetBrains Mono',monospace;font-size:.62rem;color:var(--gold);letter-spacing:.1em;text-transform:uppercase;}
+.dot{width:7px;height:7px;border-radius:50%;flex-shrink:0;}
+.dr{background:var(--rose);} .da{background:var(--gold);} .dg{background:var(--sage);}
+.ibody{padding:1.2rem;}
+
+/* ── SLIDERS ── */
+.srow{display:flex;align-items:center;gap:.8rem;margin:.45rem 0;}
+.slbl{font-family:'JetBrains Mono',monospace;font-size:.72rem;color:var(--text2);width:54px;flex-shrink:0;}
+.sval{font-family:'JetBrains Mono',monospace;font-size:.72rem;color:var(--teal);width:50px;text-align:right;flex-shrink:0;}
+input[type=range]{flex:1;-webkit-appearance:none;height:2px;background:var(--border);border-radius:2px;cursor:pointer;min-width:0;}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:16px;height:16px;border-radius:50%;background:var(--gold);cursor:pointer;}
+input[type=range]::-moz-range-thumb{width:16px;height:16px;border-radius:50%;background:var(--gold);cursor:pointer;border:none;}
+
+/* ── BUTTONS ── */
+.btn{background:transparent;border:1px solid var(--border);color:var(--text2);padding:.45rem .95rem;border-radius:var(--r);cursor:pointer;font-family:'JetBrains Mono',monospace;font-size:.7rem;letter-spacing:.05em;transition:all .2s;touch-action:manipulation;}
+.btn:hover{border-color:var(--gold);color:var(--gold);}
+.btn.pri{border-color:var(--gold);color:var(--gold);}
+.btn.pri:hover{background:rgba(201,168,83,.08);}
+.brow{display:flex;gap:.5rem;flex-wrap:wrap;margin-top:.7rem;}
+
+/* ── OUTPUT ── */
+.out{background:var(--bg);border:1px solid var(--border);border-radius:var(--r);padding:.75rem 1rem;font-family:'JetBrains Mono',monospace;font-size:.78rem;line-height:1.85;margin-top:.7rem;}
+
+/* ── CALLOUT ── */
+.callout{display:flex;gap:.75rem;align-items:flex-start;background:rgba(61,184,205,.05);border:1px solid rgba(61,184,205,.18);border-radius:var(--r);padding:.85rem 1rem;margin:.9rem 0;}
+.callout.warn{background:rgba(201,168,83,.05);border-color:rgba(201,168,83,.22);}
+.callout.rose{background:rgba(224,114,130,.05);border-color:rgba(224,114,130,.22);}
+.cicon{font-size:.95rem;flex-shrink:0;margin-top:.1rem;color:var(--teal);}
+.callout.warn .cicon{color:var(--gold);}
+.callout.rose .cicon{color:var(--rose);}
+.callout p{margin:0;font-size:.86rem;}
+
+/* ── STEPS ── */
+.steps{display:flex;flex-direction:column;gap:.7rem;margin:1rem 0;}
+.step{display:flex;gap:.9rem;align-items:flex-start;padding:.85rem;background:var(--bg3);border-radius:var(--r);border:1px solid var(--border);}
+.snum{width:24px;height:24px;border-radius:50%;background:var(--bg2);border:1px solid var(--gold);color:var(--gold);font-family:'JetBrains Mono',monospace;font-size:.68rem;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.scnt h4{font-size:.88rem;color:var(--text);font-family:'Playfair Display',serif;margin-bottom:.2rem;}
+.scnt p{font-size:.81rem;margin:0;}
+
+/* ── TABLE ── */
+.tbl{width:100%;border-collapse:collapse;margin:.8rem 0;font-size:.82rem;}
+.tbl th{text-align:left;padding:.5rem .7rem;font-family:'JetBrains Mono',monospace;font-size:.62rem;color:var(--text2);letter-spacing:.1em;border-bottom:1px solid var(--border);}
+.tbl td{padding:.5rem .7rem;border-bottom:1px solid var(--bg3);color:var(--text2);}
+.tbl tr:last-child td{border-bottom:none;}
+
+/* ── REVEAL ── */
+.reveal{opacity:0;transform:translateY(22px);transition:all .65s ease;}
+.revealed{opacity:1;transform:translateY(0);}
+
+/* ── BB GRID ── */
+.bbgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:.9rem;margin:1rem 0;}
+.bbc{background:var(--bg3);border:1px solid var(--border);border-radius:var(--r);padding:1rem;text-align:center;}
+.bbc .ic{font-size:1.5rem;margin-bottom:.4rem;}
+.bbc h4{font-size:.86rem;color:var(--text);font-family:'Playfair Display',serif;margin-bottom:.25rem;}
+.bbc p{font-size:.78rem;margin:0;}
+
+/* ── REFERENCES ── */
+.reflist{list-style:none;padding:0;}
+.reflist li{padding:.6rem 0;border-bottom:1px solid var(--bg3);font-size:.84rem;color:var(--text2);display:flex;gap:.8rem;align-items:flex-start;}
+.reflist li:last-child{border-bottom:none;}
+.refnum{font-family:'JetBrains Mono',monospace;font-size:.65rem;color:var(--gold);flex-shrink:0;min-width:24px;margin-top:.15rem;}
+.reflist a{color:var(--teal);text-decoration:underline;text-underline-offset:2px;text-decoration-thickness:1px;word-break:break-all;}
+.reflist a:hover{color:var(--gold2);}
+
+/* ── ANIMATIONS ── */
+@keyframes fadeUp{from{opacity:0;transform:translateY(18px);}to{opacity:1;transform:translateY(0);}}
+@keyframes bounce{0%,100%{transform:translateY(0);}50%{transform:translateY(5px);}}
+
+/* ── RESPONSIVE ── */
+@media(max-width:768px){
+  .hamburger{display:flex;}
+  .nav-links{display:none;}
+  section{padding:3rem 1rem;}
+  .ibody{padding:.9rem;}
+}
+canvas{display:block;}
+</style>
+</head>
+<body>
+
+<!-- MOBILE -->
+<div id="mob">
+  <a href="#neurona" onclick="cm()">01 — Neurona</a>
+  <a href="#activacion" onclick="cm()">02 — Activación</a>
+  <a href="#arquitectura" onclick="cm()">03 — Arquitectura</a>
+  <a href="#perdida" onclick="cm()">04 — Pérdida</a>
+  <a href="#backprop" onclick="cm()">05 — Backprop</a>
+  <a href="#descenso" onclick="cm()">06 — Descenso</a>
+  <a href="#cajanegra" onclick="cm()">07 — Caja Negra</a>
+  <a href="#autoencoders" onclick="cm()">08 — Autoencoders</a>
+  <a href="#referencias" onclick="cm()">09 — Referencias</a>
+</div>
+
+<!-- NAV -->
+<nav>
+  <div class="nav-logo">RN // 101</div>
+  <div class="nav-links">
+    <a href="#neurona">Neurona</a>
+    <a href="#activacion">Activación</a>
+    <a href="#arquitectura">Arquitectura</a>
+    <a href="#perdida">Pérdida</a>
+    <a href="#backprop">Backprop</a>
+    <a href="#descenso">Descenso</a>
+    <a href="#cajanegra">Caja Negra</a>
+    <a href="#autoencoders">Autoencoders</a>
+    <a href="#referencias">Refs</a>
+  </div>
+  <button class="hamburger" id="hbg" onclick="tm()" aria-label="Menú"><span></span><span></span><span></span></button>
+</nav>
+<div class="pb"><div class="pf" id="pf"></div></div>
+
+<!-- STICKY FOOTER -->
+<div id="sfooter">
+  <span>by </span><a href="https://criss-lab.com/author/cristian-candia/" target="_blank" rel="noopener">Cristian Candia, Ph.D.</a><span class="sep"></span><span></span>
+</div>
+
+<!-- ════════════ HERO ════════════ -->
+<section id="hero">
+  <canvas id="hero-canvas"></canvas>
+  <div class="hero-eyebrow">— Fundamentos teóricos y computacionales —</div>
+  <h1>Redes<br><em>Neuronales</em></h1>
+  <p class="hero-sub">Desde la neurona individual hasta autoencoders overcomplete y el problema de la caja negra. Material animado e interactivo con foco didáctico: combina formulaciones exactas con algunas simplificaciones pedagógicas.</p>  <div class="hero-pills">
+    <span class="pill">Perceptrón</span><span class="pill">Activación</span>
+    <span class="pill">Forward Pass</span><span class="pill">Backprop</span>
+    <span class="pill">Descenso gradiente</span><span class="pill">Caja negra</span>
+    <span class="pill">AE estándar</span><span class="pill">AE denoising</span>
+    <span class="pill">AE overcomplete+sparse</span>
+  </div>
+  <div class="scroll-hint"><span>desplázate</span><span class="arr">↓</span></div>
+</section>
+
+<!-- ════════════ §01 NEURONA ════════════ -->
+<section id="neurona" class="reveal">
+  <span class="sec-num">01 — La Neurona Artificial</span>
+  <h2>De la biología<br>a las <em>matemáticas</em></h2>
+  <p>El punto de partida es la neurona. McCulloch y Pitts (1943) propusieron el primer modelo formal: una unidad que recibe señales, las pondera y produce una salida binaria. El perceptrón de Rosenblatt (1958) añadió pesos adaptables. Hoy la neurona artificial conserva esta estructura básica pero dentro de un marco diferenciable.</p>
+
+  <div class="two-col">
+    <div class="card">
+      <div class="card-title">Neurona biológica</div>
+      <svg viewBox="0 0 300 155" style="width:100%;display:block;margin:auto">
+        <line x1="22" y1="40" x2="112" y2="78" stroke="#272a44" stroke-width="2"/>
+        <line x1="22" y1="78" x2="112" y2="78" stroke="#272a44" stroke-width="2"/>
+        <line x1="22" y1="116" x2="112" y2="78" stroke="#272a44" stroke-width="2"/>
+        <circle cx="22" cy="40" r="5" fill="var(--teal)" opacity=".7"/>
+        <circle cx="22" cy="78" r="5" fill="var(--teal)" opacity=".7"/>
+        <circle cx="22" cy="116" r="5" fill="var(--teal)" opacity=".7"/>
+        <text x="4" y="38" fill="var(--text2)" font-size="9" font-family="JetBrains Mono">x₁</text>
+        <text x="4" y="76" fill="var(--text2)" font-size="9" font-family="JetBrains Mono">x₂</text>
+        <text x="4" y="114" fill="var(--text2)" font-size="9" font-family="JetBrains Mono">x₃</text>
+        <circle cx="150" cy="78" r="32" fill="var(--bg3)" stroke="var(--lav)" stroke-width="1.5"/>
+        <text x="150" y="74" text-anchor="middle" fill="var(--lav)" font-size="11" font-family="JetBrains Mono">Σ</text>
+        <text x="150" y="88" text-anchor="middle" fill="var(--text3)" font-size="8" font-family="Lora">soma</text>
+        <line x1="182" y1="78" x2="268" y2="78" stroke="var(--gold)" stroke-width="2"/>
+        <circle cx="274" cy="78" r="5" fill="var(--gold)" opacity=".8"/>
+        <text x="56" y="53" fill="var(--text3)" font-size="7" font-family="Lora">dendritas</text>
+        <text x="216" y="70" fill="var(--text3)" font-size="7" font-family="Lora">axón</text>
+      </svg>
+    </div>
+    <div class="card">
+      <div class="card-title">Neurona artificial</div>
+      <svg viewBox="0 0 300 155" style="width:100%;display:block;margin:auto">
+        <line x1="22" y1="40" x2="112" y2="78" stroke="var(--border)" stroke-width="1.5"/>
+        <line x1="22" y1="78" x2="112" y2="78" stroke="var(--border)" stroke-width="1.5"/>
+        <line x1="22" y1="116" x2="112" y2="78" stroke="var(--border)" stroke-width="1.5"/>
+        <circle cx="22" cy="40" r="5" fill="var(--teal)" opacity=".8"/>
+        <circle cx="22" cy="78" r="5" fill="var(--teal)" opacity=".8"/>
+        <circle cx="22" cy="116" r="5" fill="var(--teal)" opacity=".8"/>
+        <text x="4" y="38" fill="var(--text2)" font-size="9" font-family="JetBrains Mono">x₁</text>
+        <text x="4" y="76" fill="var(--text2)" font-size="9" font-family="JetBrains Mono">x₂</text>
+        <text x="4" y="114" fill="var(--text2)" font-size="9" font-family="JetBrains Mono">x₃</text>
+        <text x="52" y="50" fill="var(--gold)" font-size="8" font-family="JetBrains Mono">w₁</text>
+        <text x="58" y="76" fill="var(--gold)" font-size="8" font-family="JetBrains Mono">w₂</text>
+        <text x="52" y="102" fill="var(--gold)" font-size="8" font-family="JetBrains Mono">w₃</text>
+        <circle cx="150" cy="78" r="32" fill="var(--bg3)" stroke="var(--teal)" stroke-width="1.5"/>
+        <text x="150" y="73" text-anchor="middle" fill="var(--teal)" font-size="10" font-family="JetBrains Mono">Σ  σ</text>
+        <text x="150" y="87" text-anchor="middle" fill="var(--text3)" font-size="7" font-family="JetBrains Mono">w·x+b</text>
+        <line x1="182" y1="78" x2="268" y2="78" stroke="var(--sage)" stroke-width="2"/>
+        <circle cx="274" cy="78" r="5" fill="var(--sage)" opacity=".8"/>
+        <text x="209" y="70" fill="var(--text2)" font-size="8" font-family="JetBrains Mono">a=σ(z)</text>
+        <line x1="150" y1="110" x2="150" y2="124" stroke="var(--rose)" stroke-width="1.5"/>
+        <circle cx="150" cy="128" r="4" fill="var(--rose)" opacity=".8"/>
+        <text x="156" y="130" fill="var(--rose)" font-size="8" font-family="JetBrains Mono">b (bias)</text>
+      </svg>
+    </div>
+  </div>
+
+  <div class="mblk">
+    <span class="cm">// Paso 1 — combinación lineal (pre-activación)</span><br>
+    <span class="va">z</span> = <span class="vc">w</span>ᵀ<span class="vc">x</span> + <span class="vr">b</span>  =  Σᵢ <span class="vc">wᵢ</span>xᵢ + <span class="vr">b</span><br><br>
+    <span class="cm">// Paso 2 — función de activación (no linealidad)</span><br>
+    <span class="vg">a</span> = <span class="vp">σ</span>(<span class="va">z</span>)
+  </div>
+
+  <!-- PERCEPTRÓN INTERACTIVO -->
+  <div class="ibox">
+    <div class="ihead"><div class="dot dr"></div><div class="dot da"></div><div class="dot dg"></div>
+      <span>Perceptrón interactivo — ajusta pesos, entradas y función de activación</span></div>
+    <div class="ibody">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:1.4rem;">
+        <div>
+          <div style="font-family:'JetBrains Mono',monospace;font-size:.62rem;color:var(--text3);margin-bottom:.7rem;letter-spacing:.12em;">ENTRADAS</div>
+          <div class="srow"><span class="slbl vc">x₁</span><input type="range" id="x1" min="-3" max="3" step=".1" value="1.5"><span class="sval" id="x1v">1.50</span></div>
+          <div class="srow"><span class="slbl vc">x₂</span><input type="range" id="x2" min="-3" max="3" step=".1" value="0.8"><span class="sval" id="x2v">0.80</span></div>
+          <div style="font-family:'JetBrains Mono',monospace;font-size:.62rem;color:var(--text3);margin:1rem 0 .7rem;letter-spacing:.12em;">PARÁMETROS</div>
+          <div class="srow"><span class="slbl va">w₁</span><input type="range" id="w1" min="-3" max="3" step=".1" value="0.8"><span class="sval" id="w1v">0.80</span></div>
+          <div class="srow"><span class="slbl va">w₂</span><input type="range" id="w2" min="-3" max="3" step=".1" value="-0.5"><span class="sval" id="w2v">-0.50</span></div>
+          <div class="srow"><span class="slbl vr">b</span><input type="range" id="bias" min="-3" max="3" step=".1" value="0.3"><span class="sval" id="biasv">0.30</span></div>
+          <div style="font-family:'JetBrains Mono',monospace;font-size:.62rem;color:var(--text3);margin:1rem 0 .5rem;letter-spacing:.12em;">ACTIVACIÓN</div>
+          <div style="display:flex;gap:.4rem;flex-wrap:wrap;">
+            <button class="btn pri" onclick="setAF('sigmoid')" id="btn-sigmoid">Sigmoid</button>
+            <button class="btn" onclick="setAF('relu')" id="btn-relu">ReLU</button>
+            <button class="btn" onclick="setAF('tanh')" id="btn-tanh">Tanh</button>
+          </div>
+        </div>
+        <div><canvas id="perc-cv" width="340" height="300" style="width:100%;border-radius:5px;background:var(--bg)"></canvas></div>
+      </div>
+      <div style="margin-top:.9rem;">
+        <div style="font-family:'JetBrains Mono',monospace;font-size:.62rem;color:var(--text3);margin-bottom:.5rem;letter-spacing:.12em;">CONTRIBUCIONES wᵢxᵢ vs. SESGO b</div>
+        <canvas id="contrib-cv" width="900" height="88" style="width:100%;border-radius:5px;"></canvas>
+      </div>
+      <div class="out" id="perc-out"></div>
+    </div>
+  </div>
+</section>
+
+<!-- ════════════ §02 ACTIVACIÓN ════════════ -->
+<section id="activacion" class="reveal">
+  <span class="sec-num">02 — Funciones de Activación</span>
+  <h2>La fuente de<br>la <em>no linealidad</em></h2>
+  <p>Sin σ no lineal, cualquier red profunda colapsa a una sola transformación afín. Trabajos clásicos como Hornik (1991) establecieron que la no linealidad--no la profundidad per se--es el ingrediente esencial para la aproximación universal.</p>
+
+  <div class="two-col">
+    <div class="card">
+      <div class="card-title">Sigmoid — σ(z)</div>
+      <div class="mblk" style="font-size:.76rem;padding:.65rem 1rem;">
+        σ(z) = <span class="vc">1/(1+e⁻ᶻ)</span> &nbsp; Rango: <span class="vg">(0,1)</span><br>
+        σ'(z) = <span class="va">σ(z)(1−σ(z))</span> &nbsp; max σ'= <span class="va">0.25</span>
+      </div>
+      <p style="font-size:.81rem;"><em style="color:var(--rose)">Vanishing gradient</em> en saturación (z≪0 o z≫0). Glorot & Bengio (2010) cuantificaron formalmente este problema.</p>
+    </div>
+    <div class="card">
+      <div class="card-title">ReLU — max(0,z)</div>
+      <div class="mblk" style="font-size:.76rem;padding:.65rem 1rem;">
+        ReLU(z) = <span class="vc">max(0,z)</span> &nbsp; Rango: <span class="vg">[0,+∞)</span><br>
+        ReLU'(z) = <span class="va">1[z>0]</span> &nbsp; (gradiente constante en activo)
+      </div>
+      <p style="font-size:.81rem;">ReLU se volvió central en deep learning moderno porque atenúa varios problemas de entrenamiento asociados a activaciones saturantes. Un riesgo conocido es el de <em style="color:var(--rose)">neuronas muertas</em> cuando z permanece ≤0 durante el entrenamiento.</p>    </div>
+    <div class="card">
+      <div class="card-title">Tanh</div>
+      <div class="mblk" style="font-size:.76rem;padding:.65rem 1rem;">
+        tanh(z) = <span class="vc">(eᶻ−e⁻ᶻ)/(eᶻ+e⁻ᶻ)</span> &nbsp; Rango: <span class="vg">(−1,1)</span><br>
+        tanh'(z) = <span class="va">1−tanh²(z)</span> &nbsp; centrado en cero
+      </div>
+    <p style="font-size:.81rem;">Al estar centrada en cero, tanh suele facilitar la optimización más que sigmoid en muchos contextos. Aun así, sigue siendo una activación saturante y puede sufrir vanishing gradients.</p>
+    </div>
+    <div class="card">
+      <div class="card-title">Leaky ReLU / ELU</div>
+      <div class="mblk" style="font-size:.76rem;padding:.65rem 1rem;">
+        LReLU(z) = <span class="vc">max(αz,z)</span>, α≪1<br>
+        ELU(z) = <span class="vc">z si z>0; α(eᶻ−1) si z≤0</span>
+      </div>
+      <p style="font-size:.81rem;">Corrigen neuronas muertas manteniendo gradiente pequeño α para z&lt;0. ELU produce salidas de media cercana a cero.</p>
+    </div>
+  </div>
+
+  <div class="ibox">
+    <div class="ihead"><div class="dot dr"></div><div class="dot da"></div><div class="dot dg"></div>
+      <span>Plotter — funciones y derivadas</span></div>
+    <div class="ibody">
+      <div style="display:flex;gap:.5rem;flex-wrap:wrap;margin-bottom:.7rem;align-items:center;">
+        <button class="btn" id="af-sigmoid" onclick="togAF('sigmoid')">σ Sigmoid</button>
+        <button class="btn" id="af-tanh" onclick="togAF('tanh')">Tanh</button>
+        <button class="btn" id="af-relu" onclick="togAF('relu')">ReLU</button>
+        <button class="btn" id="af-leaky" onclick="togAF('leaky')">Leaky ReLU</button>
+        <button class="btn" id="af-elu" onclick="togAF('elu')">ELU</button>
+        <label style="font-size:.72rem;color:var(--text2);font-family:'JetBrains Mono',monospace;display:flex;align-items:center;gap:4px;cursor:pointer;margin-left:.5rem;">
+          <input type="checkbox" id="showD" onchange="drawAF()"> derivadas
+        </label>
+      </div>
+      <canvas id="af-cv" width="900" height="290" style="width:100%;border-radius:5px;"></canvas>
+      <div id="af-legend" style="display:flex;gap:1rem;flex-wrap:wrap;margin-top:.6rem;"></div>
+    </div>
+  </div>
+
+  <div class="ibox">
+    <div class="ihead"><div class="dot dr"></div><div class="dot da"></div><div class="dot dg"></div>
+      <span>Vanishing gradient — propagación a través de L capas</span></div>
+    <div class="ibody">
+      <p style="font-size:.84rem;margin-bottom:.7rem;">Como intuición, el gradiente hacia capas tempranas depende de productos sucesivos de derivadas locales y matrices de pesos. En activaciones saturantes como sigmoid, esos productos pueden volverse muy pequeños al aumentar la profundidad, especialmente si la inicialización o la escala de activaciones no están bien controladas.</p>
+      <div class="srow" style="max-width:400px;">
+        <span class="slbl">Capas L</span>
+        <input type="range" id="vg-l" min="1" max="20" step="1" value="6" oninput="drawVG()">
+        <span class="sval" id="vg-lv">6</span>
+      </div>
+      <div style="display:flex;gap:.4rem;flex-wrap:wrap;margin-bottom:.7rem;">
+        <button class="btn" id="vg-sig" onclick="setVG('sigmoid')">Sigmoid</button>
+        <button class="btn pri" id="vg-rel" onclick="setVG('relu')">ReLU</button>
+        <button class="btn" id="vg-tan" onclick="setVG('tanh')">Tanh</button>
+      </div>
+      <canvas id="vg-cv" width="900" height="150" style="width:100%;border-radius:5px;"></canvas>
+      <div class="out" id="vg-out"></div>
+      <p style="font-size:.78rem;color:var(--text3);margin-top:.6rem;">Nota: este esquema ilustra la intuición del problema, pero en redes reales también importan la inicialización, la normalización y el espectro de las matrices de pesos. ReLU suele atenuar el vanishing gradient, no eliminarlo por completo.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ════════════ §03 ARQUITECTURA ════════════ -->
+<section id="arquitectura" class="reveal">
+  <span class="sec-num">03 — Arquitectura y Forward Pass</span>
+  <h2>Redes de capas:<br><em>feedforward</em></h2>
+  <p>Apilando neuronas en capas obtenemos una red profunda. La notación matricial permite calcular toda una capa en una sola multiplicación. Cada capa puede aprender representaciones progresivamente más útiles o abstractas de la anterior--de píxeles a bordes, a formas, a conceptos.</p>
+
+  <div class="mblk">
+    <span class="cm">// Capa l — notación matricial (m ejemplos en paralelo)</span><br>
+    <span class="va">Z</span><sup>[l]</sup> = <span class="vc">W</span><sup>[l]</sup> · <span class="vg">A</span><sup>[l-1]</sup> + <span class="vr">b</span><sup>[l]</sup><br>
+    <span class="vg">A</span><sup>[l]</sup> = σ<sup>[l]</sup>(<span class="va">Z</span><sup>[l]</sup>)<br><br>
+    <span class="vc">W</span><sup>[l]</sup> ∈ ℝ<sup>nˡ×nˡ⁻¹</sup> &nbsp; <span class="vr">b</span><sup>[l]</sup> ∈ ℝ<sup>nˡ</sup> &nbsp; <span class="vg">A</span><sup>[0]</sup> = <span class="vc">x</span>
+  </div>
+
+  <div style="background:var(--bg3);border:1px solid var(--border);border-radius:var(--r);overflow:hidden;margin:1rem 0;">
+    <canvas id="hier-cv" width="900" height="155" style="width:100%;display:block;"></canvas>
+  </div>
+
+  <div class="ibox">
+    <div class="ihead"><div class="dot dr"></div><div class="dot da"></div><div class="dot dg"></div>
+      <span>Forward pass animado — valores propagándose capa a capa</span></div>
+    <div class="ibody">
+      <canvas id="net-cv" width="900" height="310" style="width:100%;border-radius:5px;background:var(--bg)"></canvas>
+      <div class="brow">
+        <button class="btn pri" onclick="runFwd()">▶ Ejecutar Forward Pass</button>
+        <button class="btn" onclick="resetNet()">↺ Reiniciar</button>
+        <button class="btn" onclick="randNet()">⟳ Nuevos pesos</button>
+      </div>
+      <div class="out" id="net-out" style="min-height:52px;">Presiona para ver la propagación.</div>
+    </div>
+  </div>
+
+  <div class="callout">
+    <span class="cicon">◈</span>
+    <p><strong>Teorema de Aproximación Universal</strong> (Cybenko 1989; Hornik 1991): bajo hipótesis estándar, una red con una sola capa oculta suficientemente ancha puede aproximar cualquier función continua sobre un compacto. En la práctica, la profundidad suele aportar representaciones más eficientes y composicionales, además de ventajas expresivas bajo restricciones realistas de ancho, datos y parámetros.</p>
+  </div>
+</section>
+
+<!-- ════════════ §04 PÉRDIDA ════════════ -->
+<section id="perdida" class="reveal">
+  <span class="sec-num">04 — Funciones de Pérdida</span>
+  <h2>Qué <em>optimizamos</em></h2>
+  <p>La pérdida cuantifica la distancia entre predicciones y valores reales. Su elección está dictada por la tarea (regresión vs. clasificación) y la distribución asumida sobre los errores.</p>
+
+  <div class="two-col">
+    <div class="card"><div class="card-title">MSE — Regresión</div>
+      <div class="mblk" style="font-size:.76rem;padding:.65rem 1rem;">L=<span class="vc">(1/m)Σ(y−ŷ)²</span><br>∂L/∂ŷ=<span class="va">−2(y−ŷ)/m</span></div>
+      <p style="font-size:.81rem;">Maximiza la verosimilitud bajo ruido gaussiano. Sensible a outliers por penalización cuadrática.</p>
+    </div>
+    <div class="card"><div class="card-title">BCE — Clasificación binaria</div>
+      <div class="mblk" style="font-size:.76rem;padding:.65rem 1rem;">L=<span class="vc">−(1/m)Σ[y·log(ŷ)+(1−y)·log(1−ŷ)]</span><br>∂L/∂ŷ=<span class="va">(ŷ−y)/(ŷ(1−ŷ))</span></div>
+      <p style="font-size:.81rem;">Equivale a la log-verosimilitud negativa para una salida Bernoulli y está estrechamente relacionada con la divergencia KL: con la distribución objetivo fija, minimizar la entropía cruzada equivale a minimizar KL hasta una constante.</p>
+    </div>    
+    <div class="card"><div class="card-title">CCE + Softmax — Multiclase</div>
+      <div class="mblk" style="font-size:.76rem;padding:.65rem 1rem;">L=<span class="vc">−(1/m)ΣΣ yc·log(ŷc)</span><br>ŷc=<span class="va">eᶻᶜ/Σⱼeᶻʲ</span></div>
+      <p style="font-size:.81rem;">Se usa típicamente junto con softmax en clasificación multiclase. Con la distribución objetivo fija, minimizar la entropía cruzada equivale a minimizar la divergencia KL salvo una constante independiente del modelo.</p>
+    </div>        
+      <div class="card"><div class="card-title">MAE — Robustez a outliers</div>
+      <div class="mblk" style="font-size:.76rem;padding:.65rem 1rem;">L=<span class="vc">(1/m)Σ|y−ŷ|</span><br>∂L/∂ŷ=<span class="va">−sign(y−ŷ)/m</span></div>
+      <p style="font-size:.81rem;">Gradiente constante (no escala con el error). Corresponde a maximizar verosimilitud bajo distribución Laplace.</p>
+    </div>
+  </div>
+
+  <div class="ibox">
+    <div class="ihead"><div class="dot dr"></div><div class="dot da"></div><div class="dot dg"></div>
+      <span>BCE vs MSE — superficie de pérdida interactiva</span></div>
+    <div class="ibody">
+      <div class="srow" style="max-width:420px;"><span class="slbl vc">ŷ (pred)</span><input type="range" id="pred" min=".01" max=".99" step=".01" value=".7" oninput="updLoss()"><span class="sval" id="predv">0.70</span></div>
+      <div class="srow" style="max-width:420px;"><span class="slbl va">y (real)</span><input type="range" id="ytrue" min="0" max="1" step="1" value="1" oninput="updLoss()"><span class="sval" id="ytruev">1</span></div>
+      <canvas id="loss-cv" width="900" height="230" style="width:100%;border-radius:5px;margin-top:.7rem;"></canvas>
+      <div class="out" id="loss-out"></div>
+    </div>
+  </div>
+</section>
+
+<!-- ════════════ §05 BACKPROP ════════════ -->
+<section id="backprop" class="reveal">
+  <span class="sec-num">05 — Retropropagación</span>
+  <h2>Cómo <em>aprende</em><br>la red</h2>
+  <p>Rumelhart, Hinton & Williams (1986) popularizaron el algoritmo que calcula ∂L/∂θ para todos los parámetros en tiempo O(|θ|), igual que un forward pass. La clave es la <strong>regla de la cadena</strong> aplicada en orden inverso, reutilizando cada cálculo intermedio exactamente una vez.</p>
+
+  <div class="mblk">
+    <span class="cm">// Delta capa de salida L:</span><br>
+    <span class="vr">δ⁽ᴸ⁾</span> = ∇<sub>A</sub>L ⊙ σ'(<span class="va">Z⁽ᴸ⁾</span>)<br><br>
+    <span class="cm">// Delta capa l (propagación hacia atrás):</span><br>
+    <span class="vr">δ⁽ˡ⁾</span> = (<span class="vc">W⁽ˡ⁺¹⁾</span>ᵀ · <span class="vr">δ⁽ˡ⁺¹⁾</span>) ⊙ σ'(<span class="va">Z⁽ˡ⁾</span>)<br><br>
+    <span class="cm">// Gradientes de parámetros:</span><br>
+    ∂L/∂<span class="vc">W⁽ˡ⁾</span> = <span class="vr">δ⁽ˡ⁾</span>·(<span class="vg">A⁽ˡ⁻¹⁾</span>)ᵀ &nbsp;&nbsp; ∂L/∂<span class="vr">b⁽ˡ⁾</span> = <span class="vr">δ⁽ˡ⁾</span>
+  </div>
+
+  <div class="ibox">
+    <div class="ihead"><div class="dot dr"></div><div class="dot da"></div><div class="dot dg"></div>
+      <span>Grafo computacional — forward (teal) → backward (rose)</span></div>
+    <div class="ibody">
+      <canvas id="bp-cv" width="900" height="280" style="width:100%;border-radius:5px;background:var(--bg)"></canvas>
+      <div class="brow">
+        <button class="btn pri" onclick="runBP()">▶ Animar Forward + Backward</button>
+        <button class="btn" onclick="resetBP()">↺ Reiniciar</button>
+      </div>
+      <div class="out" id="bp-out" style="min-height:44px;">Presiona para ver el flujo de gradientes.</div>
+    </div>
+  </div>
+
+  <div class="steps">
+    <div class="step"><div class="snum">1</div><div class="scnt"><h4>Forward pass</h4><p>Propagar x, almacenar Z⁽ˡ⁾ y A⁽ˡ⁾ en cada capa. Calcular L.</p></div></div>
+    <div class="step"><div class="snum">2</div><div class="scnt"><h4>Gradiente en la salida</h4><p>δ⁽ᴸ⁾ = ∇L · σ'(Z⁽ᴸ⁾). Punto de partida del backward.</p></div></div>
+    <div class="step"><div class="snum">3</div><div class="scnt"><h4>Propagación hacia atrás</h4><p>Para l = L−1,…,1: δ⁽ˡ⁾ = (W⁽ˡ⁺¹⁾ᵀ δ⁽ˡ⁺¹⁾) ⊙ σ'(Z⁽ˡ⁾).</p></div></div>
+    <div class="step"><div class="snum">4</div><div class="scnt"><h4>Actualización</h4><p>θ ← θ − η · ∇L. La complejidad total es O(2|θ|): un forward + un backward.</p></div></div>
+  </div>
+</section>
+
+<!-- ════════════ §06 DESCENSO ════════════ -->
+<section id="descenso" class="reveal">
+  <span class="sec-num">06 — Descenso de Gradiente</span>
+  <h2>Navegando el<br><em>espacio de pérdida</em></h2>
+  <p>Con los gradientes disponibles, el optimizador actualiza iterativamente los parámetros. Kingma & Ba (2014) propusieron Adam, que combina estimaciones adaptativas de primer y segundo momento con corrección de sesgo; hoy es uno de los optimizadores más usados en la práctica, aunque no siempre es la mejor opción para todos los problemas.</p>
+  <div class="mblk">
+    θ ← θ − <span class="va">η</span> · ∇<sub>θ</sub>L(θ) &nbsp; <span class="cm">// GD completo (batch)</span><br>
+    θ ← θ − <span class="va">η</span> · ∇L(θ;x⁽ⁱ⁾,y⁽ⁱ⁾) &nbsp; <span class="cm">// SGD (un ejemplo)</span><br>
+    θ ← θ − <span class="va">η</span> · (1/|B|)Σ<sub>i∈B</sub>∇L &nbsp; <span class="cm">// Mini-batch</span>
+  </div>
+
+  <div class="ibox">
+    <div class="ihead"><div class="dot dr"></div><div class="dot da"></div><div class="dot dg"></div>
+      <span>Superficie de pérdida 1D — descenso animado + historial de convergencia</span></div>
+    <div class="ibody">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;margin-bottom:.7rem;">
+        <div>
+          <div class="srow"><span class="slbl va">η (lr)</span><input type="range" id="lr" min=".01" max=".8" step=".01" value=".1" oninput="updLR()"><span class="sval" id="lrv">0.10</span></div>
+          <div class="srow"><span class="slbl vc">θ₀</span><input type="range" id="th0" min="-4" max="4" step=".1" value="3.5" oninput="rstGD()"><span class="sval" id="th0v">3.50</span></div>
+          <div style="display:flex;gap:.4rem;flex-wrap:wrap;margin-top:.4rem;">
+            <button class="btn" onclick="setLS('quadratic')">Cuadrática</button>
+            <button class="btn" onclick="setLS('multimodal')">Multimodal</button>
+            <button class="btn" onclick="setLS('saddle')">Con meseta</button>
+          </div>
+        </div>
+        <div style="font-size:.81rem;color:var(--text2);padding:.4rem 0;">
+          <div style="font-family:'JetBrains Mono',monospace;font-size:.6rem;color:var(--gold);letter-spacing:.1em;margin-bottom:.4rem;">GUÍA</div>
+          η pequeño → lento pero estable<br>η grande → puede divergir<br>Multimodal → mínimos locales<br>Meseta → ∇L ≈ 0 temporalmente
+        </div>
+      </div>
+      <div style="display:grid;grid-template-columns:2fr 1fr;gap:.7rem;">
+        <canvas id="gd-cv" width="600" height="250" style="width:100%;border-radius:5px;"></canvas>
+        <canvas id="lh-cv" width="280" height="250" style="width:100%;border-radius:5px;"></canvas>
+      </div>
+      <div class="brow">
+        <button class="btn pri" onclick="runGD()">▶ Iniciar</button>
+        <button class="btn" onclick="rstGD()">↺ Reiniciar</button>
+        <button class="btn" onclick="stpGD()">→ Un paso</button>
+      </div>
+      <div class="out" id="gd-out"></div>
+    </div>
+  </div>
+
+  <table class="tbl">
+    <thead><tr><th>Optimizador</th><th>Idea clave</th><th>Regla de actualización</th></tr></thead>
+    <tbody>
+      <tr><td style="color:var(--teal);font-family:'JetBrains Mono',monospace;font-size:.78rem;">SGD+Momentum</td><td>Acumula velocidad pasada</td><td style="font-family:'JetBrains Mono',monospace;font-size:.7rem;">v←βv−η∇L; θ←θ+v</td></tr>
+      <tr><td style="color:var(--teal);font-family:'JetBrains Mono',monospace;font-size:.78rem;">AdaGrad</td><td>Escala η por parámetro</td><td style="font-family:'JetBrains Mono',monospace;font-size:.7rem;">θ←θ−(η/√G+ε)∇L</td></tr>
+      <tr><td style="color:var(--gold);font-family:'JetBrains Mono',monospace;font-size:.78rem;">RMSprop</td><td>EMA del gradiente²</td><td style="font-family:'JetBrains Mono',monospace;font-size:.7rem;">E[g²]←ρE[g²]+(1-ρ)g²</td></tr>
+      <tr><td style="color:var(--sage);font-family:'JetBrains Mono',monospace;font-size:.78rem;">Adam ★</td><td>Momentum + RMSprop + bias correction</td><td style="font-family:'JetBrains Mono',monospace;font-size:.7rem;">m̂←m/(1−β₁ᵗ); v̂←v/(1−β₂ᵗ)</td></tr>
+    </tbody>
+  </table>
+</section>
+
+<!-- ════════════ §07 CAJA NEGRA ════════════ -->
+<section id="cajanegra" class="reveal">
+  <span class="sec-num">07 — El Problema de la Caja Negra</span>
+  <h2>Capacidad sin<br><em>comprensión</em></h2>
+  <p>Una red neuronal profunda es <em>localmente</em> interpretable (cada neurona realiza una suma ponderada) pero <em>globalmente</em> opaca: millones de parámetros interactúan no linealmente produciendo comportamientos emergentes que no pueden rastrearse manualmente.</p>
+
+  <div class="ibox">
+    <div class="ihead"><div class="dot dr"></div><div class="dot da"></div><div class="dot dg"></div>
+      <span>La caja negra — entradas, salidas, interior inaccesible</span></div>
+    <div class="ibody">
+      <canvas id="bb-cv" width="900" height="210" style="width:100%;border-radius:5px;background:var(--bg)"></canvas>
+      <div class="brow">
+        <button class="btn pri" onclick="animBB()">▶ Animar</button>
+        <button class="btn" onclick="rstBB()">↺ Reiniciar</button>
+      </div>
+    </div>
+  </div>
+
+  <h3>Raíces de la opacidad</h3>
+  <div class="bbgrid">
+    <div class="bbc"><div class="ic">∞</div><h4>Composición no lineal</h4><p>L capas de σ(Wx+b) producen una función sin forma analítica cerrada.</p></div>
+    <div class="bbc"><div class="ic">⊗</div><h4>Alta dimensionalidad</h4><p>Parámetros θ ∈ ℝ⁹ a ℝ¹⁷⁵ᴮ: sin intuición geométrica posible.</p></div>
+    <div class="bbc"><div class="ic">◎</div><h4>Representaciones distribuidas</h4><p>Un concepto vive en patrones de activación de miles de neuronas simultáneas, no en una sola.</p></div>
+    <div class="bbc"><div class="ic">⚡</div><h4>Emergencia</h4><p>Capacidades no programadas emergen de la optimización. No hay regla explícita que las explique.</p></div>
+  </div>
+
+  <div class="ibox">
+    <div class="ihead"><div class="dot dr"></div><div class="dot da"></div><div class="dot dg"></div>
+      <span>Explosión de parámetros en modelos reales — escala logarítmica</span></div>
+    <div class="ibody">
+      <canvas id="param-cv" width="900" height="190" style="width:100%;border-radius:5px;background:var(--bg)"></canvas>
+    </div>
+  </div>
+
+  <div class="ibox">
+    <div class="ihead"><div class="dot dr"></div><div class="dot da"></div><div class="dot dg"></div>
+      <span>Jerarquía de representaciones por capa</span></div>
+    <div class="ibody">
+      <canvas id="labs-cv" width="900" height="185" style="width:100%;border-radius:5px;background:var(--bg)"></canvas>
+    </div>
+  </div>
+
+  <h3>Interpretabilidad (XAI)</h3>
+  <div class="two-col">
+    <div class="card"><div class="card-title">Métodos locales</div>
+      <p style="font-size:.83rem;"><strong style="color:var(--teal)">LIME:</strong> aproxima la red con un modelo lineal en vecindad de x.<br>
+      <strong style="color:var(--teal)">SHAP:</strong> atribuye la predicción a cada feature usando valores de Shapley (teoría de juegos).<br>
+      <strong style="color:var(--teal)">Saliency maps:</strong> |∂ŷ/∂x| revela qué dimensiones de la entrada más afectan la salida.</p></div>
+    <div class="card"><div class="card-title">Métodos globales</div>
+      <p style="font-size:.83rem;"><strong style="color:var(--gold)">Grad-CAM:</strong> mapas de calor sobre activaciones convolucionales. <br>
+      <strong style="color:var(--gold)">Probing:</strong> clasificadores lineales sobre representaciones internas.<br>
+      <strong style="color:var(--gold)">Dictionary learning:</strong> Bricken et al. (2023) usaron SAE overcomplete sobre activaciones de LLMs para identificar features monosemánticas.</p></div>
+  </div>
+
+  <div class="callout rose">
+    <span class="cicon">⚠</span>
+    <p>Los métodos actuales de XAI suelen ofrecer explicaciones parciales, locales o dependientes del modelo, y existe un debate activo sobre qué tan fieles son respecto del mecanismo real del modelo. La opacidad sigue siendo un problema abierto en seguridad y alineamiento de IA, una de las motivaciones para estudiar representaciones más descomponibles como las obtenidas con autoencoders sparse overcomplete.</p>
+  </div>
+</section>
+
+<!-- ════════════ §08 AUTOENCODERS ════════════ -->
+<section id="autoencoders" class="reveal">
+  <span class="sec-num">08 — Autoencoders</span>
+  <h2>Aprender <em>representaciones</em><br>sin supervisión</h2>
+  <p>Un autoencoder aprende a comprimir la entrada a un espacio latente de menor dimensión y reconstruirla. No requiere etiquetas: la señal de aprendizaje es la propia reconstrucción. Hinton & Salakhutdinov (2006) mostraron que este tipo de entrenamiento contribuía de manera importante al renovado interés en deep learning en esa etapa.</p>
+  <div class="mblk">
+    <span class="cm">// Encoder — comprime x al espacio latente</span><br>
+    <span class="vc">z</span> = f<sub>θ</sub>(<span class="vg">x</span>) &nbsp;&nbsp; z ∈ ℝ<sup>d</sup><br><br>
+    <span class="cm">// Decoder — reconstruye desde z</span><br>
+    <span class="va">x̂</span> = g<sub>φ</sub>(<span class="vc">z</span>)<br><br>
+    <span class="cm">// Pérdida de reconstrucción (MSE):</span><br>
+    L(θ,φ) = <span class="vr">(1/n)||x − g<sub>φ</sub>(f<sub>θ</sub>(x))||²</span><br><br>
+    <span class="cm">// Objetivo: min<sub>θ,φ</sub> 𝔼<sub>x~p(x)</sub>[L]</span>
+  </div>
+
+  <!-- AE ESTÁNDAR -->
+  <h3>§8.1 Autoencoder Estándar (Undercomplete)</h3>
+  <p>El caso estándar tiene <strong>d &lt; dim(x)</strong> (bottleneck compresivo). El cuello de botella fuerza a la red a retener solo parte de la información de entrada. En el caso lineal con pérdida cuadrática, esto se conecta estrechamente con PCA; en el caso no lineal, puede aprender representaciones más flexibles, pero no es equivalente a PCA en general.</p>
+  <div class="ibox">
+    <div class="ihead"><div class="dot dr"></div><div class="dot da"></div><div class="dot dg"></div>
+      <span>Arquitectura encoder → bottleneck → decoder</span></div>
+    <div class="ibody">
+      <canvas id="ae-cv" width="900" height="250" style="width:100%;border-radius:5px;background:var(--bg)"></canvas>
+      <div class="brow">
+        <button class="btn pri" onclick="runAE()">▶ Animar Encode→Decode</button>
+        <button class="btn" onclick="rstAE()">↺ Reiniciar</button>
+      </div>
+      <div class="out" id="ae-out" style="min-height:42px;">Presiona para animar.</div>
+    </div>
+  </div>
+
+  <div class="ibox">
+    <div class="ihead"><div class="dot dr"></div><div class="dot da"></div><div class="dot dg"></div>
+      <span>Demo de compresión — reconstrucción vs. dimensión latente d</span></div>
+    <div class="ibody">
+      <p style="font-size:.84rem;margin-bottom:.7rem;">Comprimimos una señal de 16 valores a d dimensiones usando una base ortogonal fija (DCT) como demostración pedagógica de compresión y reconstrucción. Esto ilustra la lógica de un bottleneck, aunque no equivale al entrenamiento general de un autoencoder aprendido sobre datos.</p>
+      <div class="srow" style="max-width:420px;"><span class="slbl vc">d</span><input type="range" id="ae-d" min="1" max="16" step="1" value="3" oninput="updAEdemo()"><span class="sval" id="ae-dv">3</span></div>
+      <div style="display:flex;gap:.4rem;flex-wrap:wrap;margin-bottom:.7rem;">
+        <button class="btn" onclick="setAEpat('sine')">Sinusoidal</button>
+        <button class="btn" onclick="setAEpat('square')">Cuadrada</button>
+        <button class="btn" onclick="setAEpat('hat')">Sombrero</button>
+        <button class="btn" onclick="setAEpat('noise')">Ruido</button>
+      </div>
+      <canvas id="aedemo-cv" width="900" height="190" style="width:100%;border-radius:5px;"></canvas>
+      <div class="out" id="aedemo-out"></div>
+    </div>
+  </div>
+
+  <!-- AE DENOISING -->
+  <h3>§8.2 Autoencoder Denoising</h3>
+  <p>Vincent et al. (2008) propusieron corromper deliberadamente la entrada antes de pasarla al encoder. La red debe reconstruir x limpio desde x̃ corrupto, lo que la obliga a aprender representaciones más robustas. Formalmente, minimiza:</p>
+
+  <div class="mblk">
+    <span class="cm">// Entrada corrompida: aplicar corrupción estocástica q(x̃|x)</span><br>
+    <span class="vr">x̃</span> = x + ε,  ε ~ 𝒩(0, σ²<span class="vr">I</span>) &nbsp; <span class="cm">// ruido gaussiano</span><br><br>
+    <span class="cm">// Objetivo del denoising AE:</span><br>
+    L<sub>DAE</sub>(θ,φ) = <span class="vr">𝔼<sub>x~p(x)</sub> 𝔼<sub>x̃~q(x̃|x)</sub>[||x − g<sub>φ</sub>(f<sub>θ</sub>(x̃))||²]</span><br><br>
+    <span class="cm">// La corrupción hace la tarea más difícil → representaciones más generales</span>
+  </div>
+
+  <div class="callout">
+    <span class="cicon">◈</span>
+    <p>Trabajos clásicos mostraron que, bajo ciertos regímenes y para niveles pequeños de corrupción, los denoising autoencoders se conectan teóricamente con la estimación del <strong>score function</strong> ∇<sub>x</sub> log p(x). Esa conexión ayuda a entender por qué esta familia de ideas es relevante para modelos generativos modernos.</p>
+  </div>
+
+  <div class="ibox">
+    <div class="ihead"><div class="dot dr"></div><div class="dot da"></div><div class="dot dg"></div>
+      <span>Denoising AE — ajusta el nivel de ruido y ve la reconstrucción</span></div>
+    <div class="ibody">
+      <p style="font-size:.84rem;margin-bottom:.7rem;">La señal original x (teal) se corrompe con ruido gaussiano σ (rose). La reconstrucción x̂ (gold) se obtiene aquí mediante umbralización suave en el espacio DCT como una aproximación didáctica inspirada en ideas de denoising y sparsity, no como una implementación literal de un autoencoder entrenado end-to-end.</p>
+      <div class="srow" style="max-width:420px;"><span class="slbl vr">σ ruido</span><input type="range" id="dn-sig" min="0" max=".5" step=".01" value=".15" oninput="updDN()"><span class="sval" id="dn-sigv">0.15</span></div>
+      <div class="srow" style="max-width:420px;"><span class="slbl vc">d latente</span><input type="range" id="dn-d" min="1" max="16" step="1" value="8" oninput="updDN()"><span class="sval" id="dn-dv">8</span></div>
+      <div style="display:flex;gap:.4rem;flex-wrap:wrap;margin-bottom:.7rem;">
+        <button class="btn" onclick="setDNpat('sine')">Sinusoidal</button>
+        <button class="btn" onclick="setDNpat('square')">Cuadrada</button>
+        <button class="btn" onclick="setDNpat('hat')">Sombrero</button>
+        <button class="btn" onclick="regenerateNoise()">⟳ Nuevo ruido</button>
+      </div>
+      <canvas id="dn-cv" width="900" height="200" style="width:100%;border-radius:5px;"></canvas>
+      <div class="out" id="dn-out"></div>
+    </div>
+  </div>
+
+  <!-- AE OVERCOMPLETE + SPARSE -->
+  <h3>§8.3 Autoencoder Overcomplete + Sparse</h3>
+  <p>Un AE <strong>overcomplete</strong> tiene <strong>d &gt; dim(x)</strong>: más dimensiones latentes que la entrada. Sin restricciones adicionales, la red aprende trivialmente la identidad. La restricción de <strong>esparsidad</strong> hace el problema no trivial y útil: fuerza que solo unas pocas unidades estén activas para cada entrada.</p>
+
+  <div class="mblk">
+    <span class="cm">// Pérdida AE sparse overcomplete:</span><br>
+    L(θ,φ) = <span class="vr">||x − g<sub>φ</sub>(f<sub>θ</sub>(x))||²</span> + <span class="vp">λ||z||₁</span><br><br>
+    <span class="cm">// z ∈ ℝᵈ con d > dim(x) (overcomplete)</span><br>
+    <span class="cm">// La penalización L1 induce esparsidad: ||z||₀ ≪ d</span><br><br>
+    <span class="cm">// Solución via ISTA (Iterative Shrinkage-Thresholding):</span><br>
+    <span class="vc">z</span> ← <span class="vg">S</span><sub>λ/L</sub>(<span class="vc">z</span> − (1/L)·<span class="vc">D</span>ᵀ(<span class="vc">Dz</span>−x))<br>
+    <span class="vg">S</span><sub>τ</sub>(u) = sign(u)·max(|u|−τ, 0) &nbsp; <span class="cm">// umbral suave</span>
+  </div>
+
+  <div class="callout warn">
+    <span class="cicon">◈</span>
+    <p>Olshausen & Field (1997) mostraron que un diccionario overcomplete+sparse aprende filtros tipo <strong>Gabor</strong>, cualitativamente similares a receptivos observados en la corteza visual primaria V1. Esto sugiere que principios de sparse coding pueden capturar regularidades relevantes de señales naturales.</p>
+  </div>
+
+  <div class="callout">
+    <span class="cicon">◈</span>
+    <p>Trabajos recientes (Bricken et al. (2023) en Anthropic) han usado sparse autoencoders overcomplete sobre activaciones internas de modelos de lenguaje para descomponer representaciones distribuidas en features más interpretables y menos polisemánticos. Es una línea prometedora para mecanistic interpretability, aunque sigue siendo un área activa y lejos de estar resuelta.</p>
+  </div>
+
+  <div class="ibox">
+    <div class="ihead"><div class="dot dr"></div><div class="dot da"></div><div class="dot dg"></div>
+      <span>Overcomplete + Sparse — ISTA en tiempo real</span></div>
+    <div class="ibody">
+      <p style="font-size:.84rem;margin-bottom:.7rem;">Diccionario D ∈ ℝ<sup>16×32</sup> (2× overcomplete). ISTA encuentra z ∈ ℝ<sup>32</sup> mínimamente sparse que reconstruye x. Observa cómo λ controla cuántos átomos están activos.</p>
+      <div class="srow" style="max-width:420px;"><span class="slbl vp">λ (sparse)</span><input type="range" id="sp-lam" min="0" max=".5" step=".01" value=".1" oninput="updSP()"><span class="sval" id="sp-lamv">0.10</span></div>
+      <div style="display:flex;gap:.4rem;flex-wrap:wrap;margin-bottom:.7rem;">
+        <button class="btn" onclick="setSPpat('sine')">Sinusoidal</button>
+        <button class="btn" onclick="setSPpat('square')">Cuadrada</button>
+        <button class="btn" onclick="setSPpat('hat')">Sombrero</button>
+      </div>
+      <canvas id="sp-cv" width="900" height="280" style="width:100%;border-radius:5px;"></canvas>
+      <div class="out" id="sp-out"></div>
+    </div>
+  </div>
+
+  <h3>Resumen comparativo</h3>
+  <table class="tbl">
+    <thead><tr><th>Variante</th><th>d vs dim(x)</th><th>Restricción extra</th><th>Aprende</th><th>Referencia</th></tr></thead>
+    <tbody>
+      <tr><td style="color:var(--teal)">AE estándar</td><td>d &lt; dim(x)</td><td>Ninguna</td><td>Compresión no supervisada; conexión con PCA en el caso lineal</td><td style="font-size:.72rem;color:var(--text3);">Hinton & Salakhutdinov 2006</td></tr>
+      <tr><td style="color:var(--sage)">AE Denoising</td><td>d &lt; dim(x)</td><td>Corrupción q(x̃|x)</td><td>Representaciones robustas; conexión teórica con score matching bajo ciertos regímenes</td><td style="font-size:.72rem;color:var(--text3);">Vincent et al. 2008</td></tr>
+      <tr><td style="color:var(--lav)">AE Overcomplete+Sparse</td><td>d &gt; dim(x)</td><td>λ||z||₁</td><td>Diccionario overcomplete; features más interpretables</td><td style="font-size:.72rem;color:var(--text3);">Olshausen & Field 1997</td></tr>
+      <tr><td style="color:var(--gold)">VAE</td><td>d &lt; dim(x)</td><td>KL(q(z|x)||p(z))</td><td>Espacio latente estructurado; generación</td><td style="font-size:.72rem;color:var(--text3);">Kingma & Welling 2013</td></tr>
+    </tbody>
+  </table>
+</section>
+
+<!-- ════════════ §09 REFERENCIAS ════════════ -->
+<section id="referencias" class="reveal">
+  <span class="sec-num">09 — Referencias</span>
+  <h2>Literatura<br><em>fundamental</em></h2>
+  <p>Selección de los trabajos seminales que sustentan el contenido de este documento.</p>
+  <ul class="reflist">
+    <li><span class="refnum">[1]</span><span>McCulloch, W.S. & Pitts, W. (1943). A logical calculus of the ideas immanent in nervous activity. <em>Bulletin of Mathematical Biophysics</em>, 5, 115–133. <a href="https://doi.org/10.1007/BF02478259" target="_blank">doi:10.1007/BF02478259</a></span></li>
+    <li><span class="refnum">[2]</span><span>Rosenblatt, F. (1958). The perceptron: A probabilistic model for information storage and organization in the brain. <em>Psychological Review</em>, 65(6), 386–408. <a href="https://doi.org/10.1037/h0042519" target="_blank">doi:10.1037/h0042519</a></span></li>
+    <li><span class="refnum">[3]</span><span>Rumelhart, D.E., Hinton, G.E. & Williams, R.J. (1986). Learning representations by back-propagating errors. <em>Nature</em>, 323, 533–536. <a href="https://doi.org/10.1038/323533a0" target="_blank">doi:10.1038/323533a0</a></span></li>
+    <li><span class="refnum">[4]</span><span>Cybenko, G. (1989). Approximation by superpositions of a sigmoidal function. <em>Mathematics of Control, Signals and Systems</em>, 2(4), 303–314. <a href="https://doi.org/10.1007/BF02551274" target="_blank">doi:10.1007/BF02551274</a></span></li>
+    <li><span class="refnum">[5]</span><span>Hornik, K. (1991). Approximation capabilities of multilayer feedforward networks. <em>Neural Networks</em>, 4(2), 251–257. <a href="https://doi.org/10.1016/0893-6080(91)90009-T" target="_blank">doi:10.1016/0893-6080(91)90009-T</a></span></li>
+    <li><span class="refnum">[6]</span><span>LeCun, Y., Bottou, L., Bengio, Y. & Haffner, P. (1998). Gradient-based learning applied to document recognition. <em>Proceedings of the IEEE</em>, 86(11), 2278–2324. <a href="https://doi.org/10.1109/5.726791" target="_blank">doi:10.1109/5.726791</a></span></li>
+    <li><span class="refnum">[7]</span><span>Olshausen, B.A. & Field, D.J. (1997). Sparse coding with an overcomplete basis set: A strategy employed by V1? <em>Vision Research</em>, 37(23), 3311–3325. <a href="https://doi.org/10.1016/S0042-6989(97)00169-7" target="_blank">doi:10.1016/S0042-6989(97)00169-7</a></span></li>
+    <li><span class="refnum">[8]</span><span>Hinton, G.E. & Salakhutdinov, R.R. (2006). Reducing the dimensionality of data with neural networks. <em>Science</em>, 313(5786), 504–507. <a href="https://doi.org/10.1126/science.1127647" target="_blank">doi:10.1126/science.1127647</a></span></li>
+    <li><span class="refnum">[9]</span><span>Vincent, P., Larochelle, H., Bengio, Y. & Manzagol, P.-A. (2008). Extracting and composing robust features with denoising autoencoders. <em>ICML 2008</em>. <a href="https://dl.acm.org/doi/10.1145/1390156.1390294" target="_blank">dl.acm.org/doi/10.1145/1390156.1390294</a></span></li>
+    <li><span class="refnum">[10]</span><span>Glorot, X. & Bengio, Y. (2010). Understanding the difficulty of training deep feedforward neural networks. <em>AISTATS 2010</em>. <a href="https://proceedings.mlr.press/v9/glorot10a.html" target="_blank">proceedings.mlr.press/v9/glorot10a</a></span></li>
+    <li><span class="refnum">[11]</span><span>Nair, V. & Hinton, G.E. (2010). Rectified linear units improve restricted Boltzmann machines. In <em>Proceedings of the 27th International Conference on Machine Learning (ICML)</em>. <a href="https://icml.cc/Conferences/2010/papers/432.pdf" target="_blank">icml.cc/Conferences/2010/papers/432.pdf</a></span></li>
+    <li><span class="refnum">[12]</span><span>Kingma, D.P. & Welling, M. (2013). Auto-encoding variational Bayes. <em>ICLR 2014</em>. <a href="https://arxiv.org/abs/1312.6114" target="_blank">arXiv:1312.6114</a></span></li>
+    <li><span class="refnum">[13]</span><span>Kingma, D.P. & Ba, J. (2014). Adam: A method for stochastic optimization. <em>ICLR 2015</em>. <a href="https://arxiv.org/abs/1412.6980" target="_blank">arXiv:1412.6980</a></span></li>
+    <li><span class="refnum">[14]</span><span>Goodfellow, I., Bengio, Y. & Courville, A. (2016). <em>Deep Learning</em>. MIT Press. <a href="https://www.deeplearningbook.org" target="_blank">deeplearningbook.org</a></span></li>
+    <li><span class="refnum">[15]</span><span>Bricken, T. et al. (2023). Towards Monosemanticity: Decomposing Language Models with Dictionary Learning. <em>Anthropic</em>. <a href="https://transformer-circuits.pub/2023/monosemantic-features/index.html" target="_blank">transformer-circuits.pub/2023/monosemantic-features</a></span></li>
+  </ul>
+</section>
+
+<footer style="max-width:960px;margin:0 auto;padding:2rem 1.5rem 3rem;border-top:1px solid var(--border);text-align:center;">
+  <div style="font-family:'JetBrains Mono',monospace;font-size:.6rem;color:var(--text3);letter-spacing:.2em;">
+    REDES NEURONALES · FUNDAMENTOS TEÓRICOS · VISUALIZACIÓN INTERACTIVA
+  </div>
+</footer>
+
+<script>
+// ═══════════════════════════════════════════════
+// NAV / MOBILE
+// ═══════════════════════════════════════════════
+function tm(){const o=document.getElementById('mob'),h=document.getElementById('hbg');o.classList.toggle('open');h.classList.toggle('open');}
+function cm(){document.getElementById('mob').classList.remove('open');document.getElementById('hbg').classList.remove('open');}
+window.addEventListener('scroll',()=>{
+  const h=document.documentElement.scrollHeight-window.innerHeight;
+  document.getElementById('pf').style.width=(window.scrollY/h*100)+'%';
+  let cur='';
+  document.querySelectorAll('section[id]').forEach(s=>{if(window.scrollY>=s.offsetTop-80)cur=s.id;});
+  document.querySelectorAll('.nav-links a,#mob a').forEach(a=>a.classList.toggle('active',a.getAttribute('href')==='#'+cur));
+},{passive:true});
+
+// REVEAL
+const ro=new IntersectionObserver(e=>e.forEach(x=>{if(x.isIntersecting)x.target.classList.add('revealed');}),{threshold:.07});
+document.querySelectorAll('.reveal').forEach(el=>ro.observe(el));
+
+// ═══════════════════════════════════════════════
+// HERO CANVAS
+// ═══════════════════════════════════════════════
+(function(){
+  const cv=document.getElementById('hero-canvas'),ctx=cv.getContext('2d');
+  let W,H,nodes=[],edges=[],pulses=[];
+  function resize(){W=cv.width=cv.offsetWidth;H=cv.height=cv.offsetHeight;init();}
+  function init(){
+    nodes=[];edges=[];pulses=[];
+    const L=[3,5,5,4,2],lx=W/(L.length+1);
+    L.forEach((n,li)=>{for(let i=0;i<n;i++) nodes.push({x:lx*(li+1),y:H/2+(i-(n-1)/2)*(H/(n+1))*.7,layer:li,r:3+Math.random()*2,ph:Math.random()*Math.PI*2});});
+    for(let a=0;a<nodes.length;a++) for(let b=0;b<nodes.length;b++) if(nodes[b].layer===nodes[a].layer+1) edges.push({a,b});
+    setInterval(()=>{
+      const s=nodes.filter(n=>n.layer===0);const src=s[Math.floor(Math.random()*s.length)];
+      if(src) pulses.push({path:bp(src),t:0,sp:.007+Math.random()*.01});
+    },500);
+  }
+  function bp(src){const p=[nodes.indexOf(src)];let c=src;while(c.layer<4){const nx=edges.filter(e=>e.a===nodes.indexOf(c)).map(e=>e.b);if(!nx.length)break;const n=nx[Math.floor(Math.random()*nx.length)];p.push(n);c=nodes[n];}return p;}
+  function draw(ts){
+    ctx.clearRect(0,0,W,H);
+    edges.forEach(e=>{const a=nodes[e.a],b=nodes[e.b];ctx.beginPath();ctx.moveTo(a.x,a.y);ctx.lineTo(b.x,b.y);ctx.strokeStyle='rgba(39,42,68,.6)';ctx.lineWidth=1;ctx.stroke();});
+    pulses=pulses.filter(p=>p.t<1);
+    pulses.forEach(p=>{p.t+=p.sp;const sg=p.t*(p.path.length-1),i=Math.floor(sg);if(i>=p.path.length-1)return;const f=sg-i,a=nodes[p.path[i]],b=nodes[p.path[i+1]];const x=a.x+(b.x-a.x)*f,y=a.y+(b.y-a.y)*f;const g=ctx.createRadialGradient(x,y,0,x,y,7);g.addColorStop(0,'rgba(201,168,83,.8)');g.addColorStop(1,'rgba(201,168,83,0)');ctx.beginPath();ctx.arc(x,y,7,0,Math.PI*2);ctx.fillStyle=g;ctx.fill();});
+    nodes.forEach(n=>{const p=.5+.5*Math.sin(ts*.002+n.ph);ctx.beginPath();ctx.arc(n.x,n.y,n.r,0,Math.PI*2);ctx.fillStyle=`rgba(201,168,83,${.2+.25*p})`;ctx.fill();});
+    requestAnimationFrame(draw);
+  }
+  window.addEventListener('resize',resize);resize();requestAnimationFrame(draw);
+})();
+
+// ═══════════════════════════════════════════════
+// MATH HELPERS
+// ═══════════════════════════════════════════════
+const sig=z=>1/(1+Math.exp(-z)),rl=z=>Math.max(0,z),th=z=>Math.tanh(z);
+const lk=(z,a=.01)=>z>=0?z:a*z,el=(z,a=1)=>z>=0?z:a*(Math.exp(z)-1);
+const dsig=z=>{const s=sig(z);return s*(1-s);},drl=z=>z>0?1:0;
+const dth=z=>1-Math.tanh(z)**2,dlk=(z,a=.01)=>z>=0?1:a,del=(z,a=1)=>z>=0?1:a*Math.exp(z);
+const slp=ms=>new Promise(r=>setTimeout(r,ms));
+const AFS={sigmoid:{fn:sig,dfn:dsig,c:'#3db8cd',l:'Sigmoid'},tanh:{fn:th,dfn:dth,c:'#c9a853',l:'Tanh'},relu:{fn:rl,dfn:drl,c:'#5bb898',l:'ReLU'},leaky:{fn:lk,dfn:dlk,c:'#e07282',l:'Leaky ReLU'},elu:{fn:el,dfn:del,c:'#8878d0',l:'ELU'}};
+
+// DCT helpers
+function dct(x){const N=x.length,R=new Array(N);for(let k=0;k<N;k++){let s=0;for(let n=0;n<N;n++) s+=x[n]*Math.cos(Math.PI*k*(2*n+1)/(2*N));R[k]=s*(k===0?Math.sqrt(1/N):Math.sqrt(2/N));}return R;}
+function idct(X){const N=X.length,R=new Array(N);for(let n=0;n<N;n++){let s=X[0]*Math.sqrt(1/N);for(let k=1;k<N;k++) s+=X[k]*Math.sqrt(2/N)*Math.cos(Math.PI*k*(2*n+1)/(2*N));R[n]=s;}return R;}
+function compress(x,k){const C=dct(x);return idct(C.map((c,i)=>i<k?c:0));}
+function softThresh(x,tau){return x.map(v=>Math.sign(v)*Math.max(0,Math.abs(v)-tau));}
+function mse(a,b){return a.reduce((s,v,i)=>s+(v-b[i])**2,0)/a.length;}
+
+const PATS={
+  sine:Array.from({length:16},(_,i)=>0.5+0.45*Math.sin(2*Math.PI*i/16)),
+  square:Array.from({length:16},(_,i)=>i<8?0.85:0.15),
+  hat:Array.from({length:16},(_,i)=>{const t=i/15;return t<.3?t/.3*.9:.3<t&&t<.7?0.9-(t-.3)/.4*.8:0.1;}),
+  noise:[.8,.2,.65,.4,.9,.15,.7,.35,.85,.25,.6,.45,.75,.3,.55,.5],
+};
+
+// ISTA for overcomplete sparse AE
+function makeDict(N,M){
+  // Overcomplete DCT dictionary, normalized columns
+  const D=Array.from({length:N},()=>new Array(M).fill(0));
+  for(let k=0;k<M;k++){let norm=0;for(let n=0;n<N;n++){D[n][k]=Math.cos(Math.PI*k*(2*n+1)/(2*M));norm+=D[n][k]**2;}norm=Math.sqrt(norm);for(let n=0;n<N;n++) D[n][k]/=norm;}
+  return D;
+}
+const DICT=makeDict(16,32);
+function ista(D,x,lam,iter=150){
+  const N=x.length,M=D[0].length;let z=new Array(M).fill(0);
+  const L=1.05; // slightly > 1 since columns are unit norm
+  for(let t=0;t<iter;t++){
+    const Dz=Array.from({length:N},(_,i)=>D[i].reduce((s,d,j)=>s+d*z[j],0));
+    const res=Dz.map((v,i)=>v-x[i]);
+    const grad=Array.from({length:M},(_,j)=>D.reduce((s,row,i)=>s+row[j]*res[i],0));
+    const tau=lam/L;
+    z=z.map((v,j)=>{const u=v-grad[j]/L;return Math.sign(u)*Math.max(0,Math.abs(u)-tau);});
+  }
+  return z;
+}
+function reconstruct(D,z){return Array.from({length:D.length},(_,i)=>D[i].reduce((s,d,j)=>s+d*z[j],0));}
+
+// ═══════════════════════════════════════════════
+// §01 PERCEPTRON
+// ═══════════════════════════════════════════════
+let pAF='sigmoid';
+function setAF(f){pAF=f;['sigmoid','relu','tanh'].forEach(x=>document.getElementById('btn-'+x).className=x===f?'btn pri':'btn');drawPerc();}
+function drawPerc(){
+  const x1=+document.getElementById('x1').value,x2=+document.getElementById('x2').value;
+  const w1=+document.getElementById('w1').value,w2=+document.getElementById('w2').value,b=+document.getElementById('bias').value;
+  ['x1','x2','w1','w2','bias'].forEach(id=>document.getElementById(id+'v').textContent=(+document.getElementById(id).value).toFixed(2));
+  const z=w1*x1+w2*x2+b,a=AFS[pAF].fn(z),c=AFS[pAF].c;
+  document.getElementById('perc-out').innerHTML=`<span class="va">z</span> = ${w1.toFixed(2)}·${x1.toFixed(2)} + ${w2.toFixed(2)}·${x2.toFixed(2)} + ${b.toFixed(2)} = <span style="color:${c};font-weight:600">${z.toFixed(4)}</span><br><span class="vg">a</span> = ${pAF}(${z.toFixed(4)}) = <span style="color:${c};font-weight:600">${a.toFixed(6)}</span>`;
+  // Activation curve
+  const cv=document.getElementById('perc-cv'),ctx=cv.getContext('2d'),W=cv.width,H=cv.height,p=26,gw=W-2*p,gh=H-2*p;
+  ctx.clearRect(0,0,W,H);ctx.fillStyle='#0d0e16';ctx.fillRect(0,0,W,H);
+  ctx.strokeStyle='var(--border)';ctx.lineWidth=1;
+  for(let i=0;i<=4;i++){ctx.beginPath();ctx.moveTo(p,p+gh*i/4);ctx.lineTo(W-p,p+gh*i/4);ctx.stroke();}
+  for(let i=0;i<=4;i++){ctx.beginPath();ctx.moveTo(p+gw*i/4,p);ctx.lineTo(p+gw*i/4,H-p);ctx.stroke();}
+  ctx.beginPath();
+  for(let px=0;px<=gw;px++){const zv=-5+10*px/gw,av=AFS[pAF].fn(zv);px===0?ctx.moveTo(p+px,H-p-(av+1.2)/2.4*gh):ctx.lineTo(p+px,H-p-(av+1.2)/2.4*gh);}
+  ctx.strokeStyle=c;ctx.lineWidth=2;ctx.stroke();
+  const cx=p+(z+5)/10*gw,cy=H-p-(a+1.2)/2.4*gh;
+  ctx.beginPath();ctx.arc(cx,cy,6,0,Math.PI*2);ctx.fillStyle=c;ctx.fill();
+  ctx.beginPath();ctx.arc(cx,cy,11,0,Math.PI*2);ctx.strokeStyle=c;ctx.globalAlpha=.25;ctx.lineWidth=2;ctx.stroke();ctx.globalAlpha=1;
+  ctx.setLineDash([3,4]);ctx.strokeStyle='rgba(255,255,255,.12)';ctx.lineWidth=1;
+  ctx.beginPath();ctx.moveTo(cx,H-p);ctx.lineTo(cx,cy);ctx.stroke();
+  ctx.beginPath();ctx.moveTo(p,cy);ctx.lineTo(cx,cy);ctx.stroke();
+  ctx.setLineDash([]);
+  // Contribution bars
+  drawContrib(w1*x1,w2*x2,b);
+}
+function drawContrib(c1,c2,cb){
+  const cv=document.getElementById('contrib-cv'),ctx=cv.getContext('2d'),W=cv.width,H=cv.height;
+  ctx.clearRect(0,0,W,H);ctx.fillStyle='#0d0e16';ctx.fillRect(0,0,W,H);
+  const items=[{l:'w₁x₁',v:c1,c:'#3db8cd'},{l:'w₂x₂',v:c2,c:'#c9a853'},{l:'b',v:cb,c:'#e07282'}];
+  const maxA=Math.max(Math.abs(c1),Math.abs(c2),Math.abs(cb),.01)*1.15;
+  const bw=(W-60)/(items.length*2+1),pad=bw,cy=H/2;
+  items.forEach((it,i)=>{
+    const x=pad+i*(bw*2+pad*.4),barH=Math.abs(it.v)/maxA*(H/2-10),y=it.v>=0?cy-barH:cy;
+    ctx.fillStyle=it.c+'33';ctx.fillRect(x,cy-H*.4,bw,H*.8);
+    ctx.fillStyle=it.c;ctx.fillRect(x,y,bw,Math.max(barH,.5));
+    ctx.fillStyle='#484862';ctx.font='9px JetBrains Mono';ctx.textAlign='center';ctx.fillText(it.l,x+bw/2,H-5);
+    ctx.fillStyle=it.c;ctx.font='bold 8px JetBrains Mono';ctx.fillText(it.v.toFixed(2),x+bw/2,it.v>=0?y-3:y+barH+11);
+  });
+  ctx.strokeStyle='#272a44';ctx.lineWidth=1;ctx.beginPath();ctx.moveTo(0,cy);ctx.lineTo(W,cy);ctx.stroke();
+  const tx=items.length*(bw*2+pad*.4)+pad*1.5;
+  ctx.fillStyle='#484862';ctx.font='8px JetBrains Mono';ctx.textAlign='left';
+  ctx.fillText(`z = ${(c1+c2+cb).toFixed(3)}`,tx,cy+4);ctx.textAlign='left';
+}
+['x1','x2','w1','w2','bias'].forEach(id=>document.getElementById(id).addEventListener('input',drawPerc));
+drawPerc();
+
+// ═══════════════════════════════════════════════
+// §02 ACTIVATION FUNCTIONS
+// ═══════════════════════════════════════════════
+let actAFs=new Set(['sigmoid','tanh','relu']);
+function togAF(n){actAFs.has(n)?actAFs.delete(n):actAFs.add(n);const b=document.getElementById('af-'+n);b.style.borderColor=actAFs.has(n)?AFS[n].c:'';b.style.color=actAFs.has(n)?AFS[n].c:'';drawAF();}
+['sigmoid','tanh','relu'].forEach(n=>{document.getElementById('af-'+n).style.borderColor=AFS[n].c;document.getElementById('af-'+n).style.color=AFS[n].c;});
+function drawAF(){
+  const cv=document.getElementById('af-cv'),ctx=cv.getContext('2d'),W=cv.width,H=cv.height,showD=document.getElementById('showD').checked;
+  ctx.clearRect(0,0,W,H);ctx.fillStyle='#0d0e16';ctx.fillRect(0,0,W,H);
+  const p=38,gw=W-2*p,gh=H-2*p;const toX=z=>p+(z+5)/10*gw,toY=y=>H-p-(y+1.6)/3.2*gh;
+  ctx.strokeStyle='#272a44';ctx.lineWidth=1;
+  [-1,0,1].forEach(y=>{ctx.beginPath();ctx.moveTo(p,toY(y));ctx.lineTo(W-p,toY(y));ctx.stroke();ctx.fillStyle='#3a3a52';ctx.font='9px JetBrains Mono';ctx.fillText(y,4,toY(y)+3);});
+  [-4,-2,0,2,4].forEach(z=>{ctx.beginPath();ctx.moveTo(toX(z),p);ctx.lineTo(toX(z),H-p);ctx.stroke();ctx.fillStyle='#3a3a52';ctx.font='9px JetBrains Mono';ctx.fillText(z,toX(z)-6,H-p+13);});
+  ctx.strokeStyle='#383858';ctx.lineWidth=1.5;ctx.beginPath();ctx.moveTo(p,toY(0));ctx.lineTo(W-p,toY(0));ctx.stroke();ctx.beginPath();ctx.moveTo(toX(0),p);ctx.lineTo(toX(0),H-p);ctx.stroke();
+  actAFs.forEach(n=>{const af=AFS[n];ctx.beginPath();for(let px=0;px<=gw;px++){const z=-5+10*px/gw,y=af.fn(z);px===0?ctx.moveTo(p+px,toY(y)):ctx.lineTo(p+px,toY(y));}ctx.strokeStyle=af.c;ctx.lineWidth=2;ctx.stroke();
+    if(showD){ctx.beginPath();for(let px=0;px<=gw;px++){const z=-5+10*px/gw,dy=af.dfn(z);px===0?ctx.moveTo(p+px,toY(dy)):ctx.lineTo(p+px,toY(dy));}ctx.setLineDash([5,4]);ctx.lineWidth=1.5;ctx.stroke();ctx.setLineDash([]);}});
+  const leg=document.getElementById('af-legend');leg.innerHTML='';
+  actAFs.forEach(n=>{const af=AFS[n];leg.innerHTML+=`<div style="display:flex;align-items:center;gap:5px;font-family:'JetBrains Mono',monospace;font-size:.7rem;color:${af.c}"><span style="width:16px;height:2px;background:${af.c};display:inline-block"></span>${af.l}</div>`;});
+}
+drawAF();
+
+// VANISHING GRADIENT
+let vgFn='relu';const vgMD={sigmoid:.25,relu:1,tanh:1};
+function setVG(f){vgFn=f;['sig','rel','tan'].forEach(x=>document.getElementById('vg-'+x).className='btn');document.getElementById('vg-'+f.slice(0,3)).className='btn pri';drawVG();}
+document.getElementById('vg-rel').className='btn pri';
+function drawVG(){
+  const L=+document.getElementById('vg-l').value;document.getElementById('vg-lv').textContent=L;
+  const md=vgMD[vgFn],cv=document.getElementById('vg-cv'),ctx=cv.getContext('2d'),W=cv.width,H=cv.height;
+  ctx.clearRect(0,0,W,H);ctx.fillStyle='#0d0e16';ctx.fillRect(0,0,W,H);
+  const p=28,bw=(W-2*p)/L-4,gh=H-p-20;
+  const cs={sigmoid:'#3db8cd',relu:'#5bb898',tanh:'#c9a853'},c=cs[vgFn];
+  for(let l=0;l<L;l++){const g=Math.pow(md,l+1),bH=Math.max(g*gh*.95,1),x=p+l*(bw+4),y=H-p-20-bH;
+    const gr=ctx.createLinearGradient(x,y,x,H-p-20);gr.addColorStop(0,c);gr.addColorStop(1,c+'22');
+    ctx.fillStyle=gr;ctx.beginPath();ctx.roundRect(x,y,bw,bH,3);ctx.fill();
+    ctx.fillStyle='#484862';ctx.font='8px JetBrains Mono';ctx.textAlign='center';ctx.fillText(`L${l+1}`,x+bw/2,H-6);
+    if(l<4||l===L-1){ctx.fillStyle=c;ctx.font='7px JetBrains Mono';ctx.fillText(g<.001?g.toExponential(1):g.toFixed(3),x+bw/2,y-3);}
+  }
+  ctx.textAlign='left';
+  const fg=Math.pow(md,L);
+  document.getElementById('vg-out').innerHTML=`max σ' = <span style="color:${c}">${md}</span> | L = ${L} | gradiente en capa 1 = <span style="color:${fg>.01?'var(--sage)':'var(--rose)'};font-weight:600">${fg.toFixed(6)}</span> (${(fg*100).toFixed(4)}% del gradiente original)`;
+}
+drawVG();
+
+// ═══════════════════════════════════════════════
+// §03 HIERARCHY CANVAS
+// ═══════════════════════════════════════════════
+(function(){
+  const cv=document.getElementById('hier-cv'),ctx=cv.getContext('2d'),W=cv.width,H=cv.height;
+  ctx.fillStyle='#0d0e16';ctx.fillRect(0,0,W,H);
+  const secs=[{l:'Capa 1',s:'Bordes & gradientes',c:'#3db8cd',draw:(cx,cy)=>{ctx.strokeStyle='#3db8cd';ctx.lineWidth=2;[[cx-20,cy,cx+20,cy],[cx,cy-20,cx,cy+20],[cx-18,cy-14,cx+18,cy+14]].forEach(([x1,y1,x2,y2])=>{ctx.beginPath();ctx.moveTo(x1,y1);ctx.lineTo(x2,y2);ctx.stroke();});}},
+    {l:'Capa 2',s:'Curvas & texturas',c:'#c9a853',draw:(cx,cy)=>{ctx.strokeStyle='#c9a853';ctx.lineWidth=1.5;for(let i=0;i<4;i++){ctx.beginPath();ctx.arc(cx,cy,6+i*6,0,Math.PI*.6);ctx.stroke();}ctx.beginPath();ctx.moveTo(cx-16,cy+10);ctx.lineTo(cx,cy-12);ctx.lineTo(cx+16,cy+10);ctx.stroke();}},
+    {l:'Capa 3',s:'Formas simples',c:'#5bb898',draw:(cx,cy)=>{ctx.strokeStyle='#5bb898';ctx.lineWidth=2;ctx.beginPath();ctx.arc(cx,cy,18,0,Math.PI*2);ctx.stroke();ctx.fillStyle='#5bb89833';ctx.fill();}},
+    {l:'Capa 4',s:'Partes de objetos',c:'#8878d0',draw:(cx,cy)=>{ctx.font='22px serif';ctx.textAlign='center';ctx.fillText('👁',cx,cy+8);}},
+    {l:'Capa L',s:'Conceptos abstractos',c:'#e07282',draw:(cx,cy)=>{ctx.font='26px serif';ctx.textAlign='center';ctx.fillText('🐱',cx,cy+9);}},
+  ];
+  const cw=W/secs.length;
+  secs.forEach((s,i)=>{
+    const cx=i*cw+cw/2,bx=i*cw+6,bw=cw-12;
+    ctx.fillStyle='rgba(22,24,40,.7)';ctx.strokeStyle=s.c+'44';ctx.lineWidth=1;ctx.beginPath();ctx.roundRect(bx,6,bw,H-12,5);ctx.fill();ctx.stroke();
+    if(i<secs.length-1){ctx.strokeStyle='#383858';ctx.lineWidth=1.5;ctx.beginPath();ctx.moveTo(bx+bw,H/2);ctx.lineTo(bx+cw,H/2);ctx.stroke();}
+    ctx.save();ctx.beginPath();ctx.roundRect(bx,6,bw,H-12,5);ctx.clip();s.draw(cx,H*.44);ctx.restore();
+    ctx.fillStyle=s.c;ctx.font='bold 9px JetBrains Mono';ctx.textAlign='center';ctx.fillText(s.l,cx,H-22);
+    ctx.fillStyle='#484862';ctx.font='8px Lora';ctx.fillText(s.s,cx,H-9);
+  });ctx.textAlign='left';
+})();
+
+// ═══════════════════════════════════════════════
+// §03 NETWORK FORWARD PASS
+// ═══════════════════════════════════════════════
+const NA=[2,4,4,3,1];let NW=[],NB=[],NA_=[],nAnim=false;
+function initNet(){NW=[];NB=[];NA_=[];for(let l=1;l<NA.length;l++){const W=[],b=[];for(let i=0;i<NA[l];i++){const r=[];for(let j=0;j<NA[l-1];j++) r.push((Math.random()-.5)*2);W.push(r);b.push((Math.random()-.5)*.4);}NW.push(W);NB.push(b);}NA_=[[0.8,-0.3]];}
+function randNet(){initNet();drawNet(-1);document.getElementById('net-out').textContent='Pesos aleatorizados.';}
+function resetNet(){initNet();drawNet(-1);document.getElementById('net-out').textContent='Reiniciado.';}
+function drawNet(al){
+  const cv=document.getElementById('net-cv'),ctx=cv.getContext('2d'),W=cv.width,H=cv.height;
+  ctx.clearRect(0,0,W,H);ctx.fillStyle='#0d0e16';ctx.fillRect(0,0,W,H);
+  const p=48,gw=W-2*p,gh=H-2*p,L=NA.length;
+  const pos=NA.map((n,li)=>{const x=p+li*gw/(L-1);return Array.from({length:n},(_,i)=>({x,y:H/2+(i-(n-1)/2)*gh/(Math.max(...NA)+1)*2.4}));});
+  for(let l=0;l<L-1;l++) for(let i=0;i<NA[l];i++) for(let j=0;j<NA[l+1];j++){const a=pos[l][i],b=pos[l+1][j],w=NW[l]?NW[l][j][i]:0;ctx.beginPath();ctx.moveTo(a.x,a.y);ctx.lineTo(b.x,b.y);ctx.strokeStyle=l<al?(w>0?'rgba(61,184,205,.3)':'rgba(224,114,130,.25)'):'rgba(39,42,68,.4)';ctx.lineWidth=l<al?.8+Math.abs(w)*.3:.6;ctx.stroke();}
+  pos.forEach((layer,li)=>{ctx.fillStyle='#3a3a52';ctx.font='9px JetBrains Mono';ctx.textAlign='center';ctx.fillText(['Entrada','Oculta 1','Oculta 2','Oculta 3','Salida'][li],layer[0].x,H-6);});
+  pos.forEach((layer,li)=>layer.forEach(node=>{const act=NA_[li]?NA_[li][layer.indexOf?layer.indexOf(node):0]:0,r=13,isA=li<=al;
+    if(isA&&li===al){const g=ctx.createRadialGradient(node.x,node.y,0,node.x,node.y,r*2.5);g.addColorStop(0,'rgba(201,168,83,.2)');g.addColorStop(1,'rgba(201,168,83,0)');ctx.beginPath();ctx.arc(node.x,node.y,r*2.5,0,Math.PI*2);ctx.fillStyle=g;ctx.fill();}
+    ctx.beginPath();ctx.arc(node.x,node.y,r,0,Math.PI*2);
+    if(isA){const t=(NA_[li]?NA_[li][layer.indexOf(node)]:0+1)/2;ctx.fillStyle=`rgba(${Math.round(t*61)},${Math.round(t*184)},${Math.round(t*205)},.6)`;}else{ctx.fillStyle='#161828';}
+    ctx.strokeStyle=isA?(li===al?'#c9a853':'#274040'):'#272a44';ctx.lineWidth=li===al?1.5:1;ctx.fill();ctx.stroke();
+    if(isA&&NA_[li]){const v=NA_[li][layer.indexOf(node)];ctx.fillStyle='#11121e';ctx.font='7px JetBrains Mono';ctx.textAlign='center';ctx.fillText(v.toFixed(2),node.x,node.y+2.5);}
+  }));
+  ctx.textAlign='left';
+}
+async function runFwd(){
+  if(nAnim)return;nAnim=true;const out=document.getElementById('net-out');
+  let acts=[[...NA_[0]]];
+  for(let l=0;l<NW.length;l++){const p=acts[l],c=[];for(let i=0;i<NA[l+1];i++){let z=NB[l][i];for(let j=0;j<NA[l];j++) z+=NW[l][i][j]*p[j];c.push(sig(z));}acts.push(c);}
+  NA_=acts;
+  for(let l=0;l<NA.length;l++){drawNet(l);out.innerHTML=`<span class="va">Capa ${l}</span> → [${acts[l].map(v=>v.toFixed(3)).join(', ')}]`;await slp(500);}
+  out.innerHTML=`✓ Forward completo. <span class="vc">Entrada:</span> [${acts[0].map(v=>v.toFixed(3)).join(', ')}]  <span class="vg">Salida:</span> [${acts[acts.length-1].map(v=>v.toFixed(4)).join(', ')}]`;
+  nAnim=false;
+}
+initNet();drawNet(-1);
+
+// ═══════════════════════════════════════════════
+// §04 LOSS
+// ═══════════════════════════════════════════════
+function updLoss(){
+  const pred=+document.getElementById('pred').value,y=+document.getElementById('ytrue').value;
+  document.getElementById('predv').textContent=pred.toFixed(2);document.getElementById('ytruev').textContent=y.toFixed(0);
+  const cv=document.getElementById('loss-cv'),ctx=cv.getContext('2d'),W=cv.width,H=cv.height,p=42;
+  ctx.clearRect(0,0,W,H);ctx.fillStyle='#0d0e16';ctx.fillRect(0,0,W,H);
+  const gw=W-2*p,gh=H-2*p;
+  let bce=[],mse_=[],mxL=0;
+  for(let i=0;i<=200;i++){const pv=.001+.998*i/200,b=-(y*Math.log(pv)+(1-y)*Math.log(1-pv)),m=(y-pv)**2;bce.push(b);mse_.push(m);mxL=Math.max(mxL,b,m);}
+  mxL=Math.min(mxL,6);
+  const tX=pv=>p+pv*gw,tY=l=>H-p-(l/mxL)*gh;
+  ctx.strokeStyle='#272a44';ctx.lineWidth=1;
+  [0,.25,.5,.75,1].forEach(x=>{ctx.beginPath();ctx.moveTo(tX(x),p);ctx.lineTo(tX(x),H-p);ctx.stroke();ctx.fillStyle='#3a3a52';ctx.font='9px JetBrains Mono';ctx.fillText(x.toFixed(2),tX(x)-12,H-p+13);});
+  [[0,'#3db8cd',bce],[0,'#c9a853',mse_]].forEach(([_,c,arr])=>{ctx.beginPath();arr.forEach((l,i)=>{const x=tX(.001+.998*i/200),y_=tY(Math.min(l,mxL));i===0?ctx.moveTo(x,y_):ctx.lineTo(x,y_);});ctx.strokeStyle=c;ctx.lineWidth=2;ctx.stroke();});
+  const bc=Math.min(-(y*Math.log(pred)+(1-y)*Math.log(1-pred)),mxL),mc=(y-pred)**2;
+  [[bc,'#3db8cd'],[mc,'#c9a853']].forEach(([v,c])=>{ctx.beginPath();ctx.arc(tX(pred),tY(v),5,0,Math.PI*2);ctx.fillStyle=c;ctx.fill();ctx.setLineDash([3,3]);ctx.strokeStyle=c+'77';ctx.lineWidth=1;ctx.beginPath();ctx.moveTo(tX(pred),H-p);ctx.lineTo(tX(pred),tY(v));ctx.stroke();ctx.setLineDash([]);});
+  ctx.font='10px JetBrains Mono';ctx.fillStyle='#3db8cd';ctx.fillText('── BCE',W-115,p+16);ctx.fillStyle='#c9a853';ctx.fillText('── MSE',W-115,p+33);
+  document.getElementById('loss-out').innerHTML=`y=${y}, ŷ=${pred.toFixed(2)} | <span class="vc">BCE</span> = <strong style="color:var(--teal)">${bc.toFixed(4)}</strong> | <span class="va">MSE</span> = <strong style="color:var(--gold)">${mc.toFixed(4)}</strong>`;
+}
+updLoss();
+
+// ═══════════════════════════════════════════════
+// §05 BACKPROP
+// ═══════════════════════════════════════════════
+let bpPh='idle';
+function drawBP(ph,si){
+  const cv=document.getElementById('bp-cv'),ctx=cv.getContext('2d'),W=cv.width,H=cv.height;
+  ctx.clearRect(0,0,W,H);ctx.fillStyle='#0d0e16';ctx.fillRect(0,0,W,H);
+  const nodes=[{id:'x1',x:55,y:80,l:'x₁',c:'#3db8cd',v:'0.80'},{id:'x2',x:55,y:200,l:'x₂',c:'#3db8cd',v:'-0.30'},{id:'w1',x:160,y:35,l:'w₁',c:'#c9a853',v:'0.62'},{id:'w2',x:160,y:245,l:'w₂',c:'#c9a853',v:'-0.41'},{id:'b1',x:160,y:140,l:'b',c:'#e07282',v:'0.15'},{id:'z1',x:280,y:140,l:'z',c:'#ece8dc',v:'0.81'},{id:'a1',x:415,y:140,l:'σ(z)',c:'#5bb898',v:'0.692'},{id:'z2',x:545,y:140,l:'z\'',c:'#ece8dc',v:'0.43'},{id:'a2',x:678,y:140,l:'ŷ',c:'#8878d0',v:'0.606'},{id:'L',x:800,y:140,l:'L',c:'#e07282',v:'0.498'}];
+  const edges=[{f:'x1',t:'z1',l:'×w₁',g:null},{f:'x2',t:'z1',l:'×w₂',g:null},{f:'w1',t:'z1',l:'',g:'∂z/∂w₁=x₁'},{f:'w2',t:'z1',l:'',g:'∂z/∂w₂=x₂'},{f:'b1',t:'z1',l:'+b',g:'∂z/∂b=1'},{f:'z1',t:'a1',l:'σ',g:'σ\'=0.213'},{f:'a1',t:'z2',l:'×w\'',g:'∂z\'/∂a'},{f:'z2',t:'a2',l:'σ',g:'σ\'=0.238'},{f:'a2',t:'L',l:'BCE',g:'∂L/∂ŷ'}];
+  const fw=ph==='forward'?si:(ph!=='idle'?999:-1),bw=ph==='backward'?si:-1;
+  const nm={};nodes.forEach(n=>nm[n.id]=n);
+  edges.forEach((e,ei)=>{const a=nm[e.f],b=nm[e.t];const iF=fw>=ei,iB=ph==='backward'&&bw>=(edges.length-1-ei);ctx.beginPath();ctx.moveTo(a.x+19,a.y);ctx.lineTo(b.x-19,b.y);ctx.strokeStyle=iB?'rgba(224,114,130,.6)':iF?'rgba(61,184,205,.35)':'rgba(39,42,68,.4)';ctx.lineWidth=iB?2:(iF?1.5:.7);ctx.stroke();
+    if(iB&&e.g){ctx.fillStyle='#e07282';ctx.font='8px JetBrains Mono';ctx.textAlign='center';ctx.fillText(e.g,(a.x+b.x)/2,(a.y+b.y)/2-12);}
+    if(iF&&e.l){ctx.fillStyle='rgba(152,150,170,.6)';ctx.font='8px JetBrains Mono';ctx.textAlign='center';ctx.fillText(e.l,(a.x+b.x)/2,(a.y+b.y)/2+12);}});
+  nodes.forEach(n=>{const iF=fw>=edges.findIndex(e=>e.t===n.id||e.f===n.id),r=18;
+    ctx.beginPath();ctx.arc(n.x,n.y,r,0,Math.PI*2);ctx.fillStyle=iF?n.c+'22':'#161828';ctx.strokeStyle=iF?n.c:'#272a44';ctx.lineWidth=1.5;ctx.fill();ctx.stroke();
+    ctx.fillStyle=iF?n.c:'#484862';ctx.font='bold 9px JetBrains Mono';ctx.textAlign='center';ctx.fillText(n.l,n.x,n.y+3.5);
+    if(iF&&n.v){ctx.fillStyle='rgba(236,232,220,.55)';ctx.font='7px JetBrains Mono';ctx.fillText(n.v,n.x,n.y+r+11);}});
+  ctx.textAlign='left';
+}
+async function runBP(){
+  resetBP();const out=document.getElementById('bp-out');
+  bpPh='forward';out.innerHTML='<span class="vc">→ Forward</span>: propagando valores...';
+  for(let i=0;i<9;i++){drawBP('forward',i);await slp(280);}
+  out.innerHTML='<span class="vc">✓ Forward</span> L = 0.498<br><span class="vr">← Backward</span>: propagando gradientes...';
+  await slp(550);bpPh='backward';
+  for(let i=0;i<9;i++){drawBP('backward',i);await slp(280);}
+  out.innerHTML='✓ <span class="vg">Backprop completo.</span> Gradientes ∂L/∂w₁, ∂L/∂w₂, ∂L/∂b calculados. El optimizador puede actualizar θ.';bpPh='done';
+}
+function resetBP(){bpPh='idle';drawBP('idle',-1);document.getElementById('bp-out').textContent='Presiona para ver el flujo de gradientes.';}
+resetBP();
+
+// ═══════════════════════════════════════════════
+// §06 GRADIENT DESCENT
+// ═══════════════════════════════════════════════
+let gdLS='quadratic',gdTh=3.5,gdLR=.1,gdPath=[],gdRun=false,gdTm=null;
+const LS={quadratic:{fn:t=>.4*t*t+.2*t+1,dfn:t=>.8*t+.2},multimodal:{fn:t=>Math.sin(t*1.5)*1.5+.15*t*t+1.5,dfn:t=>2.25*Math.cos(t*1.5)+.3*t},saddle:{fn:t=>.02*t**4-.5*t**2+.1*t+2,dfn:t=>.08*t**3-t+.1}};
+function setLS(n){gdLS=n;rstGD();}
+function updLR(){gdLR=+document.getElementById('lr').value;document.getElementById('lrv').textContent=gdLR.toFixed(2);}
+function rstGD(){if(gdTm)clearInterval(gdTm);gdRun=false;gdTh=+document.getElementById('th0').value;document.getElementById('th0v').textContent=gdTh.toFixed(2);gdPath=[{t:gdTh,l:LS[gdLS].fn(gdTh)}];drawGD();drawLH();document.getElementById('gd-out').innerHTML=`θ₀=${gdTh.toFixed(2)} | η=${gdLR.toFixed(2)} | L(θ₀)=${LS[gdLS].fn(gdTh).toFixed(4)}`;}
+function stpGD(){const g=LS[gdLS].dfn(gdTh);gdTh-=gdLR*g;gdPath.push({t:gdTh,l:LS[gdLS].fn(gdTh)});drawGD();drawLH();document.getElementById('gd-out').innerHTML=`Paso ${gdPath.length-1} | θ=${gdTh.toFixed(4)} | ∇L=${g.toFixed(4)} | L=${LS[gdLS].fn(gdTh).toFixed(4)}`;}
+function runGD(){if(gdRun){clearInterval(gdTm);gdRun=false;return;}gdRun=true;gdTm=setInterval(()=>{const g=LS[gdLS].dfn(gdTh);if(Math.abs(g)<.0001||gdPath.length>300){clearInterval(gdTm);gdRun=false;return;}gdTh-=gdLR*g;gdPath.push({t:gdTh,l:LS[gdLS].fn(gdTh)});drawGD();drawLH();document.getElementById('gd-out').innerHTML=`Paso ${gdPath.length-1} | θ=${gdTh.toFixed(4)} | ∇L=${g.toFixed(4)} | L=${LS[gdLS].fn(gdTh).toFixed(4)}`;},60);}
+function drawGD(){
+  const cv=document.getElementById('gd-cv'),ctx=cv.getContext('2d'),W=cv.width,H=cv.height,p=38,gw=W-2*p,gh=H-2*p,tMin=-5,tMax=5,ls=LS[gdLS];
+  ctx.clearRect(0,0,W,H);ctx.fillStyle='#0d0e16';ctx.fillRect(0,0,W,H);
+  let lMn=Infinity,lMx=-Infinity;for(let i=0;i<=200;i++){const t=tMin+(tMax-tMin)*i/200,l=ls.fn(t);lMn=Math.min(lMn,l);lMx=Math.max(lMx,l);}
+  const lPad=(lMx-lMn)*.1,toX=t=>p+(t-tMin)/(tMax-tMin)*gw,toY=l=>H-p-(l-lMn+lPad)/((lMx-lMn)+2*lPad)*gh;
+  ctx.strokeStyle='#272a44';ctx.lineWidth=1;[-4,-2,0,2,4].forEach(t=>{ctx.beginPath();ctx.moveTo(toX(t),p);ctx.lineTo(toX(t),H-p);ctx.stroke();ctx.fillStyle='#3a3a52';ctx.font='9px JetBrains Mono';ctx.fillText(t,toX(t)-5,H-p+13);});
+  ctx.beginPath();for(let i=0;i<=300;i++){const t=tMin+(tMax-tMin)*i/300,l=ls.fn(t);i===0?ctx.moveTo(toX(t),toY(l)):ctx.lineTo(toX(t),toY(l));}ctx.strokeStyle='#383858';ctx.lineWidth=2;ctx.stroke();
+  if(gdPath.length>1){ctx.beginPath();gdPath.forEach((p_,i)=>{i===0?ctx.moveTo(toX(p_.t),toY(p_.l)):ctx.lineTo(toX(p_.t),toY(p_.l));});ctx.strokeStyle='rgba(201,168,83,.35)';ctx.lineWidth=1.5;ctx.stroke();}
+  gdPath.forEach((p_,i)=>{if(i<gdPath.length-1){ctx.beginPath();ctx.arc(toX(p_.t),toY(p_.l),3,0,Math.PI*2);ctx.fillStyle=`rgba(61,184,205,${.15+.85*i/gdPath.length})`;ctx.fill();}});
+  const cur=gdPath[gdPath.length-1],cx=toX(cur.t),cy=toY(cur.l);
+  const g=ctx.createRadialGradient(cx,cy,0,cx,cy,15);g.addColorStop(0,'rgba(201,168,83,.5)');g.addColorStop(1,'rgba(201,168,83,0)');
+  ctx.beginPath();ctx.arc(cx,cy,15,0,Math.PI*2);ctx.fillStyle=g;ctx.fill();ctx.beginPath();ctx.arc(cx,cy,5,0,Math.PI*2);ctx.fillStyle='#c9a853';ctx.fill();
+  const grad=ls.dfn(cur.t);ctx.fillStyle='#e07282';ctx.font='9px JetBrains Mono';ctx.fillText(`∇L=${grad.toFixed(3)}`,cx+8,cy-5);ctx.fillStyle='#c9a853';ctx.fillText(`θ=${cur.t.toFixed(3)}`,cx+8,cy+12);
+}
+function drawLH(){
+  const cv=document.getElementById('lh-cv'),ctx=cv.getContext('2d'),W=cv.width,H=cv.height,p=26;
+  ctx.clearRect(0,0,W,H);ctx.fillStyle='#0d0e16';ctx.fillRect(0,0,W,H);
+  if(gdPath.length<2){ctx.fillStyle='#3a3a52';ctx.font='9px JetBrains Mono';ctx.textAlign='center';ctx.fillText('historial L(θ)',W/2,H/2);ctx.textAlign='left';return;}
+  const ls_=gdPath.map(p=>p.l),lMn=Math.min(...ls_),lMx=Math.max(...ls_),gw=W-2*p,gh=H-2*p;
+  const toX=i=>p+i/Math.max(ls_.length-1,1)*gw,toY=l=>H-p-(l-lMn)/(lMx-lMn+.001)*gh;
+  ctx.strokeStyle='#272a44';ctx.lineWidth=1;[0,.5,1].forEach(t=>{const y=H-p-t*gh;ctx.beginPath();ctx.moveTo(p,y);ctx.lineTo(W-p,y);ctx.stroke();ctx.fillStyle='#3a3a52';ctx.font='8px JetBrains Mono';ctx.fillText((lMn+(lMx-lMn)*t).toFixed(2),2,y+3);});
+  ctx.beginPath();ls_.forEach((l,i)=>{i===0?ctx.moveTo(toX(i),toY(l)):ctx.lineTo(toX(i),toY(l));});ctx.strokeStyle='#5bb898';ctx.lineWidth=2;ctx.stroke();
+  ctx.beginPath();ctx.arc(toX(ls_.length-1),toY(ls_[ls_.length-1]),4,0,Math.PI*2);ctx.fillStyle='#5bb898';ctx.fill();
+  ctx.fillStyle='#484862';ctx.font='8px JetBrains Mono';ctx.textAlign='center';ctx.fillText('Convergencia',W/2,13);ctx.textAlign='left';
+}
+document.getElementById('lr').addEventListener('input',updLR);
+rstGD();
+
+// ═══════════════════════════════════════════════
+// §07 BLACK BOX
+// ═══════════════════════════════════════════════
+let bbT=0,bbFr=null,bbCloud=[];
+for(let i=0;i<120;i++) bbCloud.push({x:Math.random(),y:Math.random(),c:Math.random()>.5});
+function drawBB(t){
+  const cv=document.getElementById('bb-cv'),ctx=cv.getContext('2d'),W=cv.width,H=cv.height;
+  ctx.clearRect(0,0,W,H);ctx.fillStyle='#0d0e16';ctx.fillRect(0,0,W,H);
+  const bx=W*.33,bw=W*.34,by=H*.06,bh=H*.88;
+  // Inputs
+  ['x₁','x₂','x₃','...','xₙ'].forEach((l,i,a)=>{const y=H/(a.length+1)*(i+1),al=Math.min(1,t/.2);
+    ctx.fillStyle=`rgba(61,184,205,${al})`;ctx.beginPath();ctx.arc(W*.1,y,7,0,Math.PI*2);ctx.fill();
+    ctx.fillStyle=`rgba(61,184,205,${al*.8})`;ctx.font='10px JetBrains Mono';ctx.textAlign='right';ctx.fillText(l,W*.08,y+4);
+    if(al>.0){const prg=Math.min(1,(t-.05)/.2);ctx.beginPath();ctx.moveTo(W*.1+8,y);ctx.lineTo(W*.1+8+(bx-4-W*.1-8)*prg,y);ctx.strokeStyle=`rgba(61,184,205,${al*.4})`;ctx.lineWidth=1.5;ctx.stroke();}});
+  // Box
+  const bxA=Math.min(1,t/.12);
+  ctx.fillStyle=`rgba(8,8,18,${bxA})`;ctx.strokeStyle=`rgba(39,42,68,${bxA})`;ctx.lineWidth=1;ctx.beginPath();ctx.roundRect(bx,by,bw,bh,6);ctx.fill();ctx.stroke();
+  if(t>.28){
+    const wA=Math.min(1,(t-.28)/.3);ctx.save();ctx.beginPath();ctx.roundRect(bx,by,bw,bh,6);ctx.clip();
+    bbCloud.forEach(pt=>{ctx.beginPath();ctx.arc(bx+pt.x*bw,by+pt.y*bh,1.5,0,Math.PI*2);ctx.fillStyle=pt.c?`rgba(201,168,83,${wA*.5})`:`rgba(224,114,130,${wA*.5})`;ctx.fill();});
+    for(let i=0;i<18;i++){const a=bbCloud[i*3%bbCloud.length],b=bbCloud[(i*3+9)%bbCloud.length];ctx.beginPath();ctx.moveTo(bx+a.x*bw,by+a.y*bh);ctx.lineTo(bx+b.x*bw,by+b.y*bh);ctx.strokeStyle=`rgba(72,72,98,${wA*.35})`;ctx.lineWidth=.7;ctx.stroke();}
+    ctx.fillStyle=`rgba(72,72,98,${wA})`;ctx.font=`bold ${Math.round(55*wA)}px Lora`;ctx.textAlign='center';ctx.fillText('?',bx+bw/2,by+bh/2+18);
+    ctx.restore();
+  }
+  ctx.fillStyle=`rgba(72,72,98,${bxA*.9})`;ctx.font='9px JetBrains Mono';ctx.textAlign='center';ctx.fillText('RED NEURONAL',bx+bw/2,by-7);
+  // Outputs
+  ['ŷ₁','ŷ₂'].forEach((l,i,a)=>{const y=H/(a.length+1)*(i+1),al=Math.min(1,Math.max(0,(t-.6)/.25));
+    ctx.fillStyle=`rgba(91,184,152,${al})`;ctx.beginPath();ctx.arc(W*.9,y,7,0,Math.PI*2);ctx.fill();
+    ctx.fillStyle=`rgba(91,184,152,${al*.8})`;ctx.font='10px JetBrains Mono';ctx.textAlign='left';ctx.fillText(l,W*.92,y+4);
+    if(al>.0){ctx.beginPath();ctx.moveTo(bx+bw+4,y);ctx.lineTo(W*.9-8,y);ctx.strokeStyle=`rgba(91,184,152,${al*.4})`;ctx.lineWidth=1.5;ctx.stroke();}});
+  ctx.textAlign='left';
+}
+function animBB(){if(bbFr)cancelAnimationFrame(bbFr);bbT=0;const step=()=>{bbT=Math.min(bbT+.013,1);drawBB(bbT);if(bbT<1)bbFr=requestAnimationFrame(step);};step();}
+function rstBB(){if(bbFr)cancelAnimationFrame(bbFr);bbT=0;drawBB(0);}
+drawBB(0);
+
+// PARAM CHART
+(function(){
+  const cv=document.getElementById('param-cv'),ctx=cv.getContext('2d'),W=cv.width,H=cv.height;
+  ctx.fillStyle='#0d0e16';ctx.fillRect(0,0,W,H);
+  const m=[{n:'LeNet-5\n1998',p:6e4,c:'#3db8cd'},{n:'AlexNet\n2012',p:62e6,c:'#5bb898'},{n:'ResNet-50\n2015',p:25e6,c:'#c9a853'},{n:'BERT\n2018',p:110e6,c:'#8878d0'},{n:'GPT-2\n2019',p:1.5e9,c:'#d47d55'},{n:'GPT-3\n2020',p:175e9,c:'#e07282'}];
+  const p=38,bpad=14,bw=(W-2*p)/(m.length)-bpad,lMn=Math.log10(1e4),lMx=Math.log10(175e9),gh=H-p-28;
+  m.forEach((md,i)=>{const lp=Math.log10(md.p),bH=(lp-lMn)/(lMx-lMn)*gh,x=p+i*(bw+bpad),y=H-p-28-bH;
+    const g=ctx.createLinearGradient(x,y,x,H-p-28);g.addColorStop(0,md.c);g.addColorStop(1,md.c+'22');
+    ctx.fillStyle=g;ctx.beginPath();ctx.roundRect(x,y,bw,bH,3);ctx.fill();
+    const ps=md.p>=1e9?(md.p/1e9).toFixed(0)+'B':md.p>=1e6?(md.p/1e6).toFixed(0)+'M':'60K';
+    ctx.fillStyle=md.c;ctx.font='bold 9px JetBrains Mono';ctx.textAlign='center';ctx.fillText(ps,x+bw/2,y-3);
+    md.n.split('\n').forEach((l,li)=>{ctx.fillStyle='#484862';ctx.font='8px Lora';ctx.fillText(l,x+bw/2,H-p-28+13+li*12);});
+  });
+  [1e4,1e6,1e8,1e10,1e12].forEach(v=>{const y=H-p-28-(Math.log10(v)-lMn)/(lMx-lMn)*gh;if(y>0&&y<H-p-28){ctx.strokeStyle='#272a44';ctx.lineWidth=1;ctx.beginPath();ctx.moveTo(p,y);ctx.lineTo(W,y);ctx.stroke();ctx.fillStyle='#3a3a52';ctx.font='8px JetBrains Mono';ctx.textAlign='right';ctx.fillText(v>=1e9?(v/1e9)+'B':v>=1e6?(v/1e6)+'M':v>=1e3?(v/1e3)+'K':v,p-3,y+3);}});
+  ctx.textAlign='left';ctx.save();ctx.translate(12,H/2);ctx.rotate(-Math.PI/2);ctx.fillStyle='#484862';ctx.font='9px JetBrains Mono';ctx.textAlign='center';ctx.fillText('Parámetros (log)',0,0);ctx.restore();
+})();
+
+// LAYER ABSTRACTION
+(function(){
+  const cv=document.getElementById('labs-cv'),ctx=cv.getContext('2d'),W=cv.width,H=cv.height;
+  ctx.fillStyle='#0d0e16';ctx.fillRect(0,0,W,H);
+  const secs=[{l:'Píxeles brutos',s:'Señal sin procesar',c:'#484862',d:(cx,cy)=>{for(let r=0;r<6;r++) for(let c=0;c<6;c++){const v=Math.random()>.5?.55:.12;ctx.fillStyle=`rgba(100,100,160,${v})`;ctx.fillRect(cx-27+c*9,cy-27+r*9,8,8);}}},
+    {l:'Bordes',s:'Gradientes locales',c:'#3db8cd',d:(cx,cy)=>{ctx.strokeStyle='#3db8cd';ctx.lineWidth=2;[[cx-20,cy,cx+20,cy],[cx,cy-20,cx,cy+20],[cx-16,cy-12,cx+16,cy+12]].forEach(([x1,y1,x2,y2])=>{ctx.beginPath();ctx.moveTo(x1,y1);ctx.lineTo(x2,y2);ctx.stroke();})}},
+    {l:'Texturas',s:'Patrones locales',c:'#c9a853',d:(cx,cy)=>{ctx.strokeStyle='#c9a853';ctx.lineWidth=1.5;for(let i=0;i<4;i++){ctx.beginPath();ctx.arc(cx,cy,6+i*5,0,Math.PI*.7);ctx.stroke();}}},
+    {l:'Formas',s:'Objetos simples',c:'#5bb898',d:(cx,cy)=>{ctx.strokeStyle='#5bb898';ctx.lineWidth=2;ctx.beginPath();ctx.arc(cx,cy,18,0,Math.PI*2);ctx.stroke();ctx.fillStyle='#5bb89833';ctx.fill();}},
+    {l:'Partes',s:'Componentes semánticos',c:'#8878d0',d:(cx,cy)=>{ctx.font='22px serif';ctx.textAlign='center';ctx.fillText('👁',cx,cy+8);}},
+    {l:'Concepto',s:'Representación abstracta',c:'#e07282',d:(cx,cy)=>{ctx.font='26px serif';ctx.textAlign='center';ctx.fillText('🐱',cx,cy+9);}},
+  ];
+  const cw=W/secs.length;
+  secs.forEach((s,i)=>{const cx=i*cw+cw/2,bx=i*cw+4,bw_=cw-8;
+    ctx.fillStyle='rgba(22,24,40,.8)';ctx.strokeStyle=s.c+'33';ctx.lineWidth=1;ctx.beginPath();ctx.roundRect(bx,4,bw_,H-8,4);ctx.fill();ctx.stroke();
+    if(i<secs.length-1){ctx.strokeStyle='#383858';ctx.lineWidth=1.5;ctx.beginPath();ctx.moveTo(bx+bw_,H/2);ctx.lineTo(bx+cw,H/2);ctx.stroke();}
+    ctx.save();ctx.beginPath();ctx.roundRect(bx,4,bw_,H-8,4);ctx.clip();s.d(cx,H*.44);ctx.restore();
+    ctx.fillStyle=s.c;ctx.font='bold 9px JetBrains Mono';ctx.textAlign='center';ctx.fillText(s.l,cx,H-22);
+    ctx.fillStyle='#484862';ctx.font='8px Lora';ctx.fillText(s.s,cx,H-9);});
+  ctx.textAlign='left';
+})();
+
+// ═══════════════════════════════════════════════
+// §08 AUTOENCODERS
+// ═══════════════════════════════════════════════
+const AE_ARCH=[8,5,3,2,3,5,8];
+let aeAnimFr=null;
+function drawAEarch(ph,si){
+  const cv=document.getElementById('ae-cv'),ctx=cv.getContext('2d'),W=cv.width,H=cv.height;
+  ctx.clearRect(0,0,W,H);ctx.fillStyle='#0d0e16';ctx.fillRect(0,0,W,H);
+  const p=30,gw=W-2*p,gh=H-2*p,L=AE_ARCH.length;
+  const pos=AE_ARCH.map((n,li)=>{const x=p+li*gw/(L-1);return Array.from({length:n},(_,i)=>({x,y:H/2+(i-(n-1)/2)*gh/(Math.max(...AE_ARCH)+1)*2.2}));});
+  const nc=li=>li<3?'#3db8cd':li===3?'#8878d0':'#c9a853';
+  for(let l=0;l<L-1;l++) for(let i=0;i<AE_ARCH[l];i++) for(let j=0;j<AE_ARCH[l+1];j++){
+    const a=pos[l][i],b=pos[l+1][j],isL=(ph==='encode'&&l<=si)||(ph==='decode'&&(l<3||(l>=3&&l-3<=si)));
+    ctx.beginPath();ctx.moveTo(a.x,a.y);ctx.lineTo(b.x,b.y);ctx.strokeStyle=isL?(l<3?'rgba(61,184,205,.28)':'rgba(201,168,83,.28)'):'rgba(30,32,52,.5)';ctx.lineWidth=.7;ctx.stroke();}
+  pos.forEach((layer,li)=>layer.forEach(node=>{const r=li===3?10:8,isL=(ph==='encode'&&li<=si)||(ph==='decode'&&(li<3||li-3<=si));
+    if(isL&&li===3){const g=ctx.createRadialGradient(node.x,node.y,0,node.x,node.y,r*2.5);g.addColorStop(0,'rgba(136,120,208,.3)');g.addColorStop(1,'rgba(136,120,208,0)');ctx.beginPath();ctx.arc(node.x,node.y,r*2.5,0,Math.PI*2);ctx.fillStyle=g;ctx.fill();}
+    ctx.beginPath();ctx.arc(node.x,node.y,r,0,Math.PI*2);ctx.fillStyle=isL?nc(li)+'33':'#161828';ctx.strokeStyle=isL?nc(li):'#272a44';ctx.lineWidth=li===3?1.5:1;ctx.fill();ctx.stroke();}));
+  const lbls=['x ∈ ℝ⁸','Enc-1','Enc-2','z ∈ ℝ²','Dec-1','Dec-2','x̂ ∈ ℝ⁸'];
+  pos.forEach((l,li)=>{ctx.fillStyle=nc(li)+(li===3?'':'88');ctx.font='8px JetBrains Mono';ctx.textAlign='center';ctx.fillText(lbls[li],l[0].x,H-7);});
+  ctx.fillStyle='rgba(61,184,205,.4)';ctx.font='9px JetBrains Mono';ctx.textAlign='center';ctx.fillText('← ENCODER →',pos[1][0].x,14);
+  ctx.fillStyle='rgba(136,120,208,.7)';ctx.fillText('LATENTE',pos[3][0].x,14);
+  ctx.fillStyle='rgba(201,168,83,.4)';ctx.fillText('← DECODER →',pos[5][0].x,14);
+  if(ph==='encode'&&si>=3){ctx.fillStyle='rgba(136,120,208,.8)';ctx.font='bold 8px JetBrains Mono';ctx.fillText('z=f_θ(x)',pos[3][0].x,H*.38);}
+  if(ph==='decode'&&si>=3){ctx.fillStyle='rgba(201,168,83,.8)';ctx.font='bold 8px JetBrains Mono';ctx.fillText('x̂=g_φ(z)',pos[5][0].x,H*.38);}
+  ctx.textAlign='left';
+}
+async function runAE(){
+  const out=document.getElementById('ae-out');out.innerHTML='<span class="vc">→ Encoding</span>: comprimiendo...';
+  for(let s=0;s<=6;s++){drawAEarch('encode',s);await slp(380);}
+  out.innerHTML='<span class="vp">Espacio latente z ∈ ℝ²</span>: representación comprimida.<br><span class="va">← Decoding</span>: reconstruyendo...';
+  await slp(550);for(let s=0;s<=6;s++){drawAEarch('decode',s);await slp(380);}
+  out.innerHTML='✓ <span class="vg">x̂ ≈ x</span>. L = ||x − g_φ(f_θ(x))||² minimizada.';
+}
+function rstAE(){drawAEarch('idle',0);document.getElementById('ae-out').textContent='Presiona para animar.';}
+rstAE();
+
+// AE COMPRESSION DEMO
+let aePat='sine';
+function setAEpat(p){aePat=p;updAEdemo();}
+function updAEdemo(){
+  const d=+document.getElementById('ae-d').value;document.getElementById('ae-dv').textContent=d;
+  const orig=PATS[aePat],rec=compress(orig,d),err=mse(orig,rec);
+  const cv=document.getElementById('aedemo-cv'),ctx=cv.getContext('2d'),W=cv.width,H=cv.height,N=16,p=28;
+  ctx.clearRect(0,0,W,H);ctx.fillStyle='#0d0e16';ctx.fillRect(0,0,W,H);
+  const gw=W-2*p,gap=gw/N,bw=gap*.82;
+  orig.forEach((v,i)=>{const x=p+i*gap,bH=(H-p*2-16)*v,y=H-p-16-bH;ctx.fillStyle='rgba(61,184,205,.2)';ctx.fillRect(x,y,bw,bH);ctx.fillStyle='rgba(61,184,205,.7)';ctx.fillRect(x,y,bw,2);});
+  rec.forEach((v,i)=>{const vC=Math.max(0,Math.min(1,v)),x=p+i*gap,bH=(H-p*2-16)*vC,y=H-p-16-bH;ctx.fillStyle='rgba(201,168,83,.85)';ctx.fillRect(x+bw*.3,y,bw*.4,Math.max(bH,1));});
+  orig.forEach((_,i)=>{ctx.fillStyle='#3a3a52';ctx.font='8px JetBrains Mono';ctx.textAlign='center';ctx.fillText(i+1,p+i*gap+bw/2,H-3);});
+  ctx.textAlign='left';ctx.font='10px JetBrains Mono';ctx.fillStyle='rgba(61,184,205,.7)';ctx.fillText('■ Original',p,14);ctx.fillStyle='rgba(201,168,83,.85)';ctx.fillText('■ Reconstrucción',p+110,14);
+  document.getElementById('aedemo-out').innerHTML=`Señal: <span class="vc">${aePat}</span> | d = <span class="va">${d}</span> | MSE = <span style="color:${err<.005?'var(--sage)':err<.03?'var(--gold)':'var(--rose)'};font-weight:600">${err.toFixed(5)}</span> | Compresión: <span class="vp">${(d/16*100).toFixed(0)}% del espacio original</span>`;
+}
+updAEdemo();
+
+// DENOISING AE
+let dnPat='sine',dnNoise=null;
+function setDNpat(p){dnPat=p;dnNoise=null;updDN();}
+function regenerateNoise(){dnNoise=null;updDN();}
+function boxMuller(){const u1=Math.random()+1e-10,u2=Math.random();return Math.sqrt(-2*Math.log(u1))*Math.cos(2*Math.PI*u2);}
+function updDN(){
+  const sig_=+document.getElementById('dn-sig').value,d=+document.getElementById('dn-d').value;
+  document.getElementById('dn-sigv').textContent=sig_.toFixed(2);document.getElementById('dn-dv').textContent=d;
+  const orig=PATS[dnPat];
+  if(!dnNoise||dnNoise.length!==orig.length) dnNoise=Array.from({length:orig.length},()=>boxMuller());
+  const noisy=orig.map((v,i)=>Math.max(0,Math.min(1,v+dnNoise[i]*sig_)));
+  // Denoise: DCT -> soft threshold -> IDCT (Wiener/sparse prior estimator)
+  const C=dct(noisy),tau=sig_*Math.sqrt(2*Math.log(orig.length));
+  const denoised=idct(softThresh(C.map((c,i)=>i<d?c:0),tau)).map(v=>Math.max(0,Math.min(1,v)));
+  const mse_noisy=mse(orig,noisy),mse_denoised=mse(orig,denoised);
+  const cv=document.getElementById('dn-cv'),ctx=cv.getContext('2d'),W=cv.width,H=cv.height,N=16,p=28;
+  ctx.clearRect(0,0,W,H);ctx.fillStyle='#0d0e16';ctx.fillRect(0,0,W,H);
+  const gw=W-2*p,gap=gw/N,bw=gap*.82;
+  // Original (teal outline)
+  orig.forEach((v,i)=>{const x=p+i*gap,bH=(H-p*2-16)*v,y=H-p-16-bH;ctx.fillStyle='rgba(61,184,205,.18)';ctx.fillRect(x,y,bw,bH);ctx.fillStyle='rgba(61,184,205,.7)';ctx.fillRect(x,y,bw,2);});
+  // Noisy (rose)
+  noisy.forEach((v,i)=>{const x=p+i*gap,bH=(H-p*2-16)*v,y=H-p-16-bH;ctx.fillStyle='rgba(224,114,130,.55)';ctx.fillRect(x+bw*.15,y,bw*.3,Math.max(bH,1));});
+  // Denoised (gold)
+  denoised.forEach((v,i)=>{const x=p+i*gap,bH=(H-p*2-16)*v,y=H-p-16-bH;ctx.fillStyle='rgba(201,168,83,.9)';ctx.fillRect(x+bw*.55,y,bw*.4,Math.max(bH,1));});
+  orig.forEach((_,i)=>{ctx.fillStyle='#3a3a52';ctx.font='8px JetBrains Mono';ctx.textAlign='center';ctx.fillText(i+1,p+i*gap+bw/2,H-3);});
+  ctx.textAlign='left';ctx.font='10px JetBrains Mono';
+  ctx.fillStyle='rgba(61,184,205,.7)';ctx.fillText('■ Original',p,14);
+  ctx.fillStyle='rgba(224,114,130,.7)';ctx.fillText('■ Corrupto x̃',p+100,14);
+  ctx.fillStyle='rgba(201,168,83,.9)';ctx.fillText('■ Denoised x̂',p+215,14);
+  document.getElementById('dn-out').innerHTML=`σ = ${sig_.toFixed(2)} | d = ${d} | MSE(x̃,x) = <span style="color:var(--rose)">${mse_noisy.toFixed(4)}</span> | MSE(x̂,x) = <span style="color:${mse_denoised<mse_noisy?'var(--sage)':'var(--rose)'};font-weight:600">${mse_denoised.toFixed(4)}</span>`;
+}
+updDN();
+
+// SPARSE OVERCOMPLETE AE
+let spPat='sine';
+function setSPpat(p){spPat=p;updSP();}
+function updSP(){
+  const lam=+document.getElementById('sp-lam').value;document.getElementById('sp-lamv').textContent=lam.toFixed(2);
+  const x=PATS[spPat];const z=ista(DICT,x,lam);const xhat=reconstruct(DICT,z);
+  const nnz=z.filter(v=>Math.abs(v)>1e-6).length,err=mse(x,xhat);
+  const cv=document.getElementById('sp-cv'),ctx=cv.getContext('2d'),W=cv.width,H=cv.height;
+  ctx.clearRect(0,0,W,H);ctx.fillStyle='#0d0e16';ctx.fillRect(0,0,W,H);
+  // Top panel: original vs reconstruction
+  const tp=20,bh=(H/2-tp-10);const N=16,gw=W-80,gap=gw/N,bw=gap*.82;
+  x.forEach((v,i)=>{const x_=40+i*gap,hh=bh*v,y=tp+bh-hh;ctx.fillStyle='rgba(61,184,205,.2)';ctx.fillRect(x_,y,bw,hh);ctx.fillStyle='rgba(61,184,205,.7)';ctx.fillRect(x_,y,bw,2);});
+  xhat.forEach((v,i)=>{const vC=Math.max(-1,Math.min(2,v)),x_=40+i*gap,hh=bh*vC,y=tp+bh-hh;ctx.fillStyle='rgba(201,168,83,.85)';ctx.fillRect(x_+bw*.35,y,bw*.55,Math.max(Math.abs(hh),1));});
+  ctx.fillStyle='#3a3a52';ctx.font='8px JetBrains Mono';ctx.textAlign='right';ctx.fillText('x vs x̂',38,tp+bh/2+4);
+  // Divider
+  ctx.strokeStyle='#272a44';ctx.lineWidth=1;ctx.beginPath();ctx.moveTo(0,H/2);ctx.lineTo(W,H/2);ctx.stroke();
+  // Bottom panel: latent activations z ∈ R^32
+  const M=32,gw2=W-80,gap2=gw2/M,bw2=gap2*.82,midY=H/2+10+(H/2-20)/2,maxZ=Math.max(...z.map(Math.abs),.01);
+  ctx.fillStyle='#3a3a52';ctx.font='8px JetBrains Mono';ctx.textAlign='right';ctx.fillText('z ∈ ℝ³²',38,midY+4);
+  z.forEach((v,i)=>{const x_=40+i*gap2,active=Math.abs(v)>1e-6,absV=Math.abs(v)/maxZ,hh=(H/2-20)*absV*.9,y=midY-hh/2;
+    ctx.fillStyle=active?'rgba(136,120,208,.7)':'rgba(39,42,68,.3)';ctx.fillRect(x_,y,bw2,Math.max(hh,active?1:.3));
+    if(active){ctx.fillStyle='#8878d0';ctx.font='7px JetBrains Mono';ctx.textAlign='center';ctx.fillText(i,x_+bw2/2,H/2+10+(H/2-20)-4);}});
+  ctx.font='10px JetBrains Mono';ctx.textAlign='left';ctx.fillStyle='rgba(61,184,205,.7)';ctx.fillText('■ Original',40,14);ctx.fillStyle='rgba(201,168,83,.9)';ctx.fillText('■ Reconstrucción',140,14);
+  ctx.fillStyle='rgba(136,120,208,.7)';ctx.fillText('■ Átomos activos',40,H/2+14+(H/2-20)*.95);
+  document.getElementById('sp-out').innerHTML=`λ = ${lam.toFixed(2)} | Átomos activos: <span style="color:var(--lav);font-weight:600">${nnz} / 32</span> (${(nnz/32*100).toFixed(0)}%) | MSE reconstrucción = <span style="color:${err<.01?'var(--sage)':err<.05?'var(--gold)':'var(--rose)'};font-weight:600">${err.toFixed(5)}</span>`;
+}
+updSP();
+</script>
+</body>
+</html>
