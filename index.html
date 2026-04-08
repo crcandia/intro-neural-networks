@@ -1,10 +1,67 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Redes Neuronales — Fundamentos</title>
-<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400;1,600&family=Lora:ital,wght@0,400;0,500;1,400&family=JetBrains+Mono:wght@300;400;500&display=swap" rel="stylesheet">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <!-- Google Analytics 4 -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-7920H0KDVQ"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+    gtag('config', 'G-7920H0KDVQ');
+  </script>
+
+  <title>Redes Neuronales: perceptrón, backpropagation, funciones de activación y autoencoders</title>
+  <meta name="description" content="Material interactivo en español sobre fundamentos de redes neuronales: perceptrón, funciones de activación, forward pass, backpropagation, descenso de gradiente, caja negra y autoencoders.">
+  <meta name="robots" content="index, follow, max-snippet:-1, max-image-preview:large, max-video-preview:-1">
+  <link rel="canonical" href="https://rrnn.criss-lab.com/">
+  <meta name="author" content="Cristian Candia, Ph.D.">
+  <meta name="publisher" content="CRiSS-Lab">
+  <meta name="theme-color" content="#0d0e16">
+
+  <!-- Open Graph -->
+  <meta property="og:type" content="website">
+  <meta property="og:locale" content="es_CL">
+  <meta property="og:title" content="Redes Neuronales — Fundamentos interactivos">
+  <meta property="og:description" content="Perceptrón, funciones de activación, backpropagation, descenso de gradiente y autoencoders en un sitio interactivo en español.">
+  <meta property="og:url" content="https://rrnn.criss-lab.com/">
+  <meta property="og:site_name" content="CRiSS-Lab">
+  <meta property="og:image" content="https://rrnn.criss-lab.com/og-image.jpg">
+  <meta property="og:image:alt" content="Vista previa del sitio Redes Neuronales — Fundamentos">
+
+  <!-- Twitter -->
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Redes Neuronales — Fundamentos interactivos">
+  <meta name="twitter:description" content="Perceptrón, funciones de activación, backpropagation, descenso de gradiente y autoencoders en un sitio interactivo en español.">
+  <meta name="twitter:image" content="https://rrnn.criss-lab.com/og-image.jpg">
+
+  <!-- Datos estructurados -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "LearningResource",
+    "name": "Redes Neuronales — Fundamentos",
+    "description": "Material interactivo en español sobre fundamentos de redes neuronales, incluyendo perceptrón, funciones de activación, backpropagation, descenso de gradiente y autoencoders.",
+    "educationalLevel": "Undergraduate",
+    "learningResourceType": "InteractiveResource",
+    "inLanguage": "es",
+    "author": {
+      "@type": "Person",
+      "name": "Cristian Candia, Ph.D."
+    },
+    "publisher": {
+      "@type": "Organization",
+      "name": "CRiSS-Lab"
+    },
+    "url": "https://rrnn.criss-lab.com/"
+  }
+  </script>
+
+  <!-- Fuentes -->
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400;1,600&family=Lora:ital,wght@0,400;0,500;1,400&family=JetBrains+Mono:wght@300;400;500&display=swap" rel="stylesheet">
+
 <style>
 :root {
   --bg:#0d0e16; --bg2:#11121e; --bg3:#161828; --surface:#1b1d2e; --border:#272a44;
